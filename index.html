@@ -678,6 +678,93 @@ body.lang-mm {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(56,37,27,0.2); border-radius: 2px; }
+
+/* ===== USER CHIP ===== */
+.user-chip {
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.3);
+  border-radius: 14px;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.user-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px; }
+
+/* ===== LOGIN MODAL ===== */
+.login-welcome {
+  text-align: center;
+  padding: 8px 0 16px;
+}
+.login-welcome .login-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+}
+.login-welcome p {
+  font-size: 13px;
+  color: var(--secondary);
+  line-height: 1.6;
+}
+
+/* ===== HISTORY ===== */
+.session-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.session-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.session-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.badge-stock { background: #e3f2fd; color: #1565c0; }
+.badge-order { background: #e8f5e9; color: #2e7d32; }
+.session-info { flex: 1; min-width: 0; }
+.session-person { font-size: 13px; font-weight: 600; color: var(--dark); }
+.session-date { font-size: 11px; color: var(--secondary); margin-top: 1px; }
+.session-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  border-top: 1px solid transparent;
+}
+.session-body.open {
+  max-height: 600px;
+  border-top-color: var(--border);
+}
+.session-msg {
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: 'IBM Plex Sans Thai', monospace;
+  color: var(--dark);
+  background: var(--bg-light);
+  max-height: 300px;
+  overflow-y: auto;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -688,6 +775,7 @@ body.lang-mm {
     <div class="header-brand">
       <span class="brand-name-main" id="hd-name">เกลอ ข้าวขาหมู</span>
       <span class="brand-name-sub" id="hd-sub">ระบบจัดการสต็อก</span>
+      <span class="user-chip" id="header-user-chip" onclick="changeUser()">👤 <span class="user-chip-name" id="header-user-name"></span></span>
     </div>
     <div class="lang-toggle">
       <button id="lang-th" class="active" onclick="setLang('th')">TH</button>
@@ -774,6 +862,21 @@ body.lang-mm {
       </button>
     </div>
 
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div class="page-title" id="history-title">ประวัติการทำงาน</div>
+        <div class="page-sub" id="history-sub">บันทึกการเช็คสต็อกและสั่งซื้อ</div>
+      </div>
+      <div class="filter-scroll" id="history-filters"></div>
+      <div id="history-list">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <p>กำลังโหลด...</p>
+        </div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-header">
@@ -817,26 +920,30 @@ body.lang-mm {
   </main>
 
   <!-- BOTTOM NAV -->
-  <nav id="bottom-nav">
-    <button class="nav-item active" data-page="home" onclick="goPage('home')">
+  <nav id="bottom-nav" style="justify-content:space-around;">
+    <button class="nav-item active" data-page="home" onclick="goPage('home')" style="flex:1;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span id="nav-home">หน้าหลัก</span>
+      <span id="nav-home" style="font-size:9px;">หน้าหลัก</span>
     </button>
-    <button class="nav-item" data-page="stock" onclick="goPage('stock')">
+    <button class="nav-item" data-page="stock" onclick="goPage('stock')" style="flex:1;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      <span id="nav-stock">สต็อก</span>
+      <span id="nav-stock" style="font-size:9px;">สต็อก</span>
     </button>
-    <button class="nav-item" data-page="order" onclick="goPage('order')">
+    <button class="nav-item" data-page="order" onclick="goPage('order')" style="flex:1;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-      <span id="nav-order">สั่งซื้อ</span>
+      <span id="nav-order" style="font-size:9px;">สั่งซื้อ</span>
     </button>
-    <button class="nav-item" data-page="manage" onclick="goPage('manage')">
+    <button class="nav-item" data-page="history" onclick="goPage('history')" style="flex:1;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span id="nav-history" style="font-size:9px;">ประวัติ</span>
+    </button>
+    <button class="nav-item" data-page="manage" onclick="goPage('manage')" style="flex:1;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      <span id="nav-manage">จัดการ</span>
+      <span id="nav-manage" style="font-size:9px;">จัดการ</span>
     </button>
-    <button class="nav-item" data-page="settings" onclick="goPage('settings')">
+    <button class="nav-item" data-page="settings" onclick="goPage('settings')" style="flex:1;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      <span id="nav-settings">ตั้งค่า</span>
+      <span id="nav-settings" style="font-size:9px;">ตั้งค่า</span>
     </button>
   </nav>
 </div>
@@ -933,6 +1040,30 @@ body.lang-mm {
     <div class="modal-footer">
       <button class="btn-primary" id="fm-save-btn" onclick="saveItem()">บันทึก</button>
       <button class="btn-secondary" id="fm-del-btn" onclick="deleteItemFromModal()" style="display:none;color:#c62828;border-color:#c62828;">ลบรายการนี้</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="login-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="login-modal-title">ระบุชื่อผู้ใช้งาน</span>
+    </div>
+    <div class="modal-body">
+      <div class="login-welcome">
+        <span class="login-icon">👤</span>
+        <p id="login-desc">กรอกชื่อของคุณเพื่อบันทึกลงในรายงานและประวัติการทำงาน</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="login-name-label">ชื่อ / ชื่อเล่น</label>
+        <input type="text" class="form-input" id="login-name" placeholder="เช่น สมชาย, ห้อง, แอม..." autocomplete="name"
+          onkeydown="if(event.key==='Enter') submitLogin()">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="login-btn" onclick="submitLogin()">เข้าใช้งาน</button>
     </div>
   </div>
 </div>
@@ -1133,6 +1264,10 @@ let orderSearchQ = '';
 let manageSearchQ = '';
 let catOpenState = {}; // track which categories are open per page
 let orderChecked = {}; // {itemId: {checked, qty}}
+let currentUser = sessionStorage.getItem('gler_user') || '';
+let pendingPage = null;
+let sessions = [];
+let historyFilterType = 'all';
 
 // ===== INIT =====
 async function init() {
@@ -1158,6 +1293,7 @@ async function init() {
   });
 
   applyLang();
+  updateUserDisplay();
   renderHome();
   renderStock();
   renderOrder();
@@ -1173,6 +1309,7 @@ async function init() {
     renderHome(); renderStock(); renderOrder(); renderManage();
   }
   subscribeRealtime();
+  loadSessions().then(() => renderHistory());
 
   document.getElementById('stock-search').addEventListener('input', e => {
     stockSearchQ = e.target.value.toLowerCase();
@@ -1227,6 +1364,13 @@ function applyLang() {
   document.getElementById('nav-order').textContent = L.nav.order;
   document.getElementById('nav-manage').textContent = L.nav.manage;
   document.getElementById('nav-settings').textContent = L.nav.settings;
+  document.getElementById('nav-history').textContent = lang === 'mm' ? 'မှတ်တမ်း' : 'ประวัติ';
+  document.getElementById('history-title').textContent = lang === 'mm' ? 'မှတ်တမ်း' : 'ประวัติการทำงาน';
+  document.getElementById('history-sub').textContent = lang === 'mm' ? 'စတော့စစ်နှင့်မှာယူမှတ်တမ်း' : 'บันทึกการเช็คสต็อกและสั่งซื้อ';
+  document.getElementById('login-modal-title').textContent = lang === 'mm' ? 'သုံးစွဲသူအမည်' : 'ระบุชื่อผู้ใช้งาน';
+  document.getElementById('login-desc').textContent = lang === 'mm' ? 'အစီရင်ခံနှင့်မှတ်တမ်းတွင်ထည့်ရန်နာမည်ထည့်ပါ' : 'กรอกชื่อของคุณเพื่อบันทึกลงในรายงานและประวัติการทำงาน';
+  document.getElementById('login-name-label').textContent = lang === 'mm' ? 'နာမည်' : 'ชื่อ / ชื่อเล่น';
+  document.getElementById('login-btn').textContent = lang === 'mm' ? 'ဝင်ရောက်' : 'เข้าใช้งาน';
   // home
   document.getElementById('home-title').textContent = L.home.title;
   document.getElementById('home-qstock').textContent = L.home.qStock;
@@ -1284,12 +1428,18 @@ function applyLang() {
 
 // ===== NAVIGATION =====
 function goPage(page) {
+  if ((page === 'stock' || page === 'order') && !currentUser) {
+    pendingPage = page;
+    openLoginModal();
+    return;
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
   currentPage = page;
   if (page === 'home') renderHome();
   if (page === 'manage') renderManage();
+  if (page === 'history') renderHistory();
 }
 
 // ===== STATUS =====
@@ -1493,7 +1643,9 @@ function buildStockMessage() {
   const dateStr = now.toLocaleDateString('th-TH', {day:'2-digit',month:'short',year:'numeric'});
   const timeStr = now.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
 
-  let msg = `📦 สรุปสต็อก เกลอ ข้าวขาหมู\n📅 ${dateStr} | ${timeStr} น.\n━━━━━━━━━━━━━━━━\n`;
+  let msg = `📦 สรุปสต็อก เกลอ ข้าวขาหมู\n📅 ${dateStr} | ${timeStr} น.`;
+  if (currentUser) msg += `\n👤 ผู้นับ: ${currentUser}`;
+  msg += `\n━━━━━━━━━━━━━━━━\n`;
 
   let okCount = 0, lowCount = 0, emptyCount = 0;
 
@@ -1534,6 +1686,8 @@ async function sendStockTelegram() {
   if (ok) {
     lastCheck = new Date().toISOString();
     localStorage.setItem('gler_lastCheck', lastCheck);
+    const msg = document.getElementById('stock-summary-text').textContent;
+    await saveSession('stock', currentUser || 'ไม่ระบุ', msg);
     showToast(T[lang].common.success, 'success');
     closeModal('stock-modal');
     renderHome();
@@ -1546,6 +1700,8 @@ function saveStockOnly() {
   lastCheck = new Date().toISOString();
   localStorage.setItem('gler_lastCheck', lastCheck);
   saveItems();
+  const msg = buildStockMessage();
+  saveSession('stock', currentUser || 'ไม่ระบุ', msg);
   closeModal('stock-modal');
   showToast(T[lang].common.saved, 'success');
   renderHome();
@@ -1666,7 +1822,9 @@ function buildOrderMessage(selectedItems, note) {
   const dateStr = now.toLocaleDateString('th-TH', {day:'2-digit',month:'short',year:'numeric'});
   const timeStr = now.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
 
-  let msg = `🛒 ใบสั่งซื้อ เกลอ ข้าวขาหมู\n📅 ${dateStr} | ${timeStr} น.\n━━━━━━━━━━━━━━━━\n`;
+  let msg = `🛒 ใบสั่งซื้อ เกลอ ข้าวขาหมู\n📅 ${dateStr} | ${timeStr} น.`;
+  if (currentUser) msg += `\n👤 ผู้สั่ง: ${currentUser}`;
+  msg += `\n━━━━━━━━━━━━━━━━\n`;
 
   const grouped = {};
   selectedItems.forEach(item => {
@@ -1698,6 +1856,8 @@ async function sendOrderTelegram() {
   btn.textContent = T[lang].order.sendBtn;
   btn.disabled = false;
   if (ok) {
+    const msg = document.getElementById('order-summary-text').textContent;
+    await saveSession('order', currentUser || 'ไม่ระบุ', msg);
     showToast(T[lang].common.success, 'success');
     closeModal('order-modal');
     // clear selection
@@ -1929,6 +2089,131 @@ function showToast(msg, type = '') {
   toastTimer = setTimeout(() => {
     toast.className = 'toast';
   }, 2500);
+}
+
+// ===== LOGIN =====
+function openLoginModal() {
+  document.getElementById('login-name').value = currentUser || '';
+  openModal('login-modal');
+  setTimeout(() => document.getElementById('login-name').focus(), 350);
+}
+
+function submitLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  if (!name) {
+    document.getElementById('login-name').focus();
+    return;
+  }
+  currentUser = name;
+  sessionStorage.setItem('gler_user', name);
+  updateUserDisplay();
+  closeModal('login-modal');
+  if (pendingPage) {
+    const p = pendingPage;
+    pendingPage = null;
+    goPage(p);
+  }
+}
+
+function changeUser() {
+  openLoginModal();
+}
+
+function updateUserDisplay() {
+  const chip = document.getElementById('header-user-chip');
+  const nameEl = document.getElementById('header-user-name');
+  if (currentUser) {
+    chip.style.display = 'flex';
+    nameEl.textContent = currentUser;
+  } else {
+    chip.style.display = 'none';
+  }
+}
+
+// ===== SESSIONS =====
+async function saveSession(type, personName, message) {
+  const session = {
+    id: genId(),
+    type,
+    person_name: personName,
+    created_at: new Date().toISOString(),
+    message
+  };
+  sessions.unshift(session);
+  try {
+    await db.from('sessions').insert(session);
+  } catch(e) {}
+  renderHistory();
+}
+
+async function loadSessions() {
+  try {
+    const { data, error } = await db.from('sessions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error || !data) return;
+    sessions = data;
+  } catch(e) {}
+}
+
+// ===== HISTORY PAGE =====
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!list) return;
+
+  const filtersEl = document.getElementById('history-filters');
+  if (filtersEl) {
+    filtersEl.innerHTML = [
+      `<button class="filter-tab ${historyFilterType==='all'?'active':''}" onclick="setHistoryFilter('all')">ทั้งหมด</button>`,
+      `<button class="filter-tab ${historyFilterType==='stock'?'active':''}" onclick="setHistoryFilter('stock')">📦 เช็คสต็อก</button>`,
+      `<button class="filter-tab ${historyFilterType==='order'?'active':''}" onclick="setHistoryFilter('order')">🛒 สั่งซื้อ</button>`,
+    ].join('');
+  }
+
+  let filtered = historyFilterType === 'all' ? sessions : sessions.filter(s => s.type === historyFilterType);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p>ยังไม่มีประวัติ</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((s, idx) => {
+    const d = new Date(s.created_at);
+    const dateStr = d.toLocaleDateString('th-TH', {day:'2-digit',month:'short',year:'numeric'});
+    const timeStr = d.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+    const badgeClass = s.type === 'stock' ? 'badge-stock' : 'badge-order';
+    const badgeText = s.type === 'stock' ? '📦 เช็คสต็อก' : '🛒 สั่งซื้อ';
+    return `
+      <div class="session-card">
+        <div class="session-header" onclick="toggleSession(${idx})">
+          <span class="session-type-badge ${badgeClass}">${badgeText}</span>
+          <div class="session-info">
+            <div class="session-person">👤 ${s.person_name}</div>
+            <div class="session-date">${dateStr} · ${timeStr} น.</div>
+          </div>
+          <svg class="cat-chevron" id="sess-chev-${idx}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="session-body" id="sess-body-${idx}">
+          <div class="session-msg">${s.message || ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleSession(idx) {
+  const body = document.getElementById('sess-body-' + idx);
+  const chev = document.getElementById('sess-chev-' + idx);
+  if (body) {
+    const isOpen = body.classList.toggle('open');
+    if (chev) chev.classList.toggle('open', isOpen);
+  }
+}
+
+function setHistoryFilter(type) {
+  historyFilterType = type;
+  renderHistory();
 }
 
 // ===== START =====
