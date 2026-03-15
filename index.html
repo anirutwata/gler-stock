@@ -965,6 +965,19 @@ body.lang-mm {
         </div>
       </div>
       <div class="settings-section">
+        <div class="settings-section-title">🗂️ หมวดหมู่</div>
+        <div class="settings-card">
+          <div id="category-list-settings" style="margin-bottom:12px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" class="form-input" id="new-category-emoji" placeholder="📦"
+              style="width:54px;flex-shrink:0;text-align:center;font-size:18px;padding:8px 4px;">
+            <input type="text" class="form-input" id="new-category-name" placeholder="ชื่อหมวดหมู่ใหม่..."
+              onkeydown="if(event.key==='Enter') addCategoryFromSettings()" style="flex:1;">
+            <button onclick="addCategoryFromSettings()" style="flex-shrink:0;padding:0 14px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;min-height:44px;font-family:inherit;">เพิ่ม</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
         <div class="settings-section-title" id="settings-lang-section">ภาษา</div>
         <div class="settings-card">
           <div class="lang-btn-group">
@@ -1326,7 +1339,18 @@ const DEFAULT_ITEMS = [
   {id:'pk17',name_th:'น้ำยาเช็ดโต๊ะ',name_mm:'စားပွဲဆေးရည်',category:'packaging',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
 ];
 
-const CAT_ORDER = ['pork','chicken','ready','seasoning','vegetable','herb','packaging'];
+const DEFAULT_CATEGORIES = [
+  {id:'pork',      name_th:'เนื้อหมู',              emoji:'🥩', sort_order:0},
+  {id:'chicken',   name_th:'เนื้อไก่',              emoji:'🐔', sort_order:1},
+  {id:'ready',     name_th:'ของสำเร็จรูป',          emoji:'🥚', sort_order:2},
+  {id:'seasoning', name_th:'เครื่องปรุง',           emoji:'🧂', sort_order:3},
+  {id:'vegetable', name_th:'ผัก & สมุนไพร',        emoji:'🥬', sort_order:4},
+  {id:'herb',      name_th:'สมุนไพรจีน',            emoji:'🌿', sort_order:5},
+  {id:'packaging', name_th:'บรรจุภัณฑ์ & วัสดุ',  emoji:'📦', sort_order:6},
+];
+function getCatOrder() { return categories.map(c => c.id); }
+function getCatName(catId) { const c = categories.find(x => x.id === catId); return c ? c.name_th : catId; }
+function getCatEmoji(catId) { const c = categories.find(x => x.id === catId); return c ? c.emoji : '📦'; }
 
 const DEFAULT_SUPPLIERS = [
   {id:'ds1', name:'เบทาโกร'},
@@ -1356,6 +1380,7 @@ let pendingPage = null;
 let sessions = [];
 let historyFilterType = 'all';
 let suppliers = [];
+let categories = [];
 
 // ===== INIT =====
 async function init() {
@@ -1398,6 +1423,7 @@ async function init() {
   }
   subscribeRealtime();
   loadSessions().then(() => renderHistory());
+  loadCategories().then(() => { renderCategorySettings(); renderStock(); renderOrder(); renderManage(); });
   loadSuppliers().then(() => { renderSupplierSettings(); });
 
   document.getElementById('stock-search').addEventListener('input', e => {
@@ -1511,10 +1537,7 @@ function applyLang() {
   document.getElementById('fm-save-btn').textContent = L.manage.save;
   document.getElementById('fm-del-btn').textContent = L.manage.del;
   // update fm-category options
-  const catSel = document.getElementById('fm-category');
-  catSel.innerHTML = CAT_ORDER.map(c =>
-    `<option value="${c}">${T[lang].catEmoji[c]} ${T[lang].cats[c]}</option>`
-  ).join('');
+  populateCategorySelect(document.getElementById('fm-category')?.value);
 }
 
 // ===== NAVIGATION =====
@@ -1620,18 +1643,19 @@ function renderStock() {
   );
 
   const grouped = {};
-  CAT_ORDER.forEach(c => { grouped[c] = []; });
+  getCatOrder().forEach(c => { grouped[c] = []; });
   filtered.forEach(i => {
-    if (grouped[i.category]) grouped[i.category].push(i);
+    if (!grouped[i.category]) grouped[i.category] = [];
+    grouped[i.category].push(i);
   });
 
   let html = '';
-  CAT_ORDER.forEach(cat => {
-    const catItems = grouped[cat];
+  getCatOrder().forEach(cat => {
+    const catItems = grouped[cat] || [];
     if (catItems.length === 0) return;
     const isOpen = catOpenState['stock_' + cat] !== false; // default open
-    const emoji = T[lang].catEmoji[cat];
-    const catName = T[lang].cats[cat];
+    const emoji = getCatEmoji(cat);
+    const catName = getCatName(cat);
     html += `
       <div class="cat-group">
         <div class="cat-header" onclick="toggleCat('stock','${cat}')">
@@ -1648,7 +1672,7 @@ function renderStock() {
             const name = lang === 'mm' ? item.name_mm : item.name_th;
             const unit = lang === 'mm' ? item.unit_mm : item.unit_th;
             const val = item.currentStock !== null ? item.currentStock : '';
-            const emoji = T[lang].catEmoji[item.category] || '📦';
+            const emoji = getCatEmoji(item.category);
             const thumb = item.image
               ? `<img class="item-thumb" src="${item.image}" alt="">`
               : `<div class="item-thumb-empty">${emoji}</div>`;
@@ -1745,12 +1769,12 @@ function buildStockMessage() {
 
   let okCount = 0, lowCount = 0, emptyCount = 0, totalCounted = 0;
 
-  CAT_ORDER.forEach(cat => {
+  getCatOrder().forEach(cat => {
     // Only include items that have been counted (value entered)
     const catItems = items.filter(i => i.category === cat && i.currentStock !== null && i.currentStock !== undefined);
     if (catItems.length === 0) return;
-    const emoji = T.th.catEmoji[cat];
-    const catName = T.th.cats[cat];
+    const emoji = getCatEmoji(cat);
+    const catName = getCatName(cat);
     msg += `\n${emoji} ${catName}\n`;
     catItems.forEach(item => {
       const s = parseFloat(item.currentStock);
@@ -1842,7 +1866,7 @@ function renderOrder() {
             const unit = lang === 'mm' ? item.unit_mm : item.unit_th;
             const status = getStatus(item);
             const isLow = status === 'low' || status === 'empty';
-            const emoji = T[lang].catEmoji[item.category] || '📦';
+            const emoji = getCatEmoji(item.category);
             const thumb = item.image
               ? `<img class="item-thumb" src="${item.image}" alt="" style="width:36px;height:36px;">`
               : `<div class="item-thumb-empty" style="width:36px;height:36px;font-size:16px;">${emoji}</div>`;
@@ -1983,8 +2007,8 @@ function renderManage() {
   const filterEl = document.getElementById('manage-filters');
   filterEl.innerHTML = [
     `<button class="filter-tab ${manageFilterCat === 'all' ? 'active' : ''}" onclick="setManageFilter('all')">${L.common.all}</button>`,
-    ...CAT_ORDER.map(c =>
-      `<button class="filter-tab ${manageFilterCat === c ? 'active' : ''}" onclick="setManageFilter('${c}')">${T[lang].catEmoji[c]} ${T[lang].cats[c]}</button>`
+    ...getCatOrder().map(c =>
+      `<button class="filter-tab ${manageFilterCat === c ? 'active' : ''}" onclick="setManageFilter('${c}')">${getCatEmoji(c)} ${getCatName(c)}</button>`
     )
   ].join('');
 
@@ -1997,8 +2021,8 @@ function renderManage() {
   listEl.innerHTML = filtered.map(item => {
     const name = lang === 'mm' ? item.name_mm : item.name_th;
     const secName = lang === 'mm' ? item.name_th : null;
-    const emoji = T[lang].catEmoji[item.category];
-    const catName = T[lang].cats[item.category];
+    const emoji = getCatEmoji(item.category);
+    const catName = getCatName(item.category);
     const thumb = item.image
       ? `<img class="item-thumb" src="${item.image}" alt="">`
       : `<div class="item-thumb-empty">${emoji}</div>`;
@@ -2035,7 +2059,7 @@ function openItemModal(id) {
     document.getElementById('item-modal-title').textContent = L.manage.editTitle;
     document.getElementById('fm-name-th').value = item.name_th;
     document.getElementById('fm-name-mm').value = item.name_mm;
-    document.getElementById('fm-category').value = item.category;
+    populateCategorySelect(item.category);
     // supplier set via populateSupplierSelect()
     document.getElementById('fm-unit-th').value = item.unit_th;
     document.getElementById('fm-unit-mm').value = item.unit_mm;
@@ -2047,7 +2071,7 @@ function openItemModal(id) {
     document.getElementById('item-modal-title').textContent = L.manage.addBtn;
     document.getElementById('fm-name-th').value = '';
     document.getElementById('fm-name-mm').value = '';
-    document.getElementById('fm-category').value = 'pork';
+    populateCategorySelect(categories[0]?.id);
     document.getElementById('fm-unit-th').value = '';
     document.getElementById('fm-unit-mm').value = '';
     document.getElementById('fm-minstock').value = '';
@@ -2297,6 +2321,92 @@ async function confirmAddSupplier() {
     populateSupplierSelect(sup.name);
     renderSupplierSettings();
     showToast('เพิ่มผู้จำหน่ายแล้ว ✓', 'success');
+  }
+}
+
+// ===== CATEGORIES =====
+async function loadCategories() {
+  const saved = localStorage.getItem('gler_categories');
+  if (saved) categories = JSON.parse(saved);
+  try {
+    const { data, error } = await db.from('categories').select('*').order('sort_order');
+    if (!error && data) {
+      if (data.length === 0) {
+        categories = DEFAULT_CATEGORIES.map(c => ({...c}));
+        await db.from('categories').insert(categories);
+      } else {
+        categories = data;
+      }
+      localStorage.setItem('gler_categories', JSON.stringify(categories));
+    }
+  } catch(e) {
+    if (categories.length === 0) categories = DEFAULT_CATEGORIES.map(c => ({...c}));
+  }
+}
+
+async function addCategory(name, emoji) {
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  if (categories.find(c => c.name_th.toLowerCase() === trimmed.toLowerCase())) {
+    showToast('มีหมวดหมู่นี้แล้ว', 'error'); return null;
+  }
+  const cat = { id: genId(), name_th: trimmed, emoji: (emoji || '').trim() || '📦', sort_order: categories.length };
+  categories.push(cat);
+  localStorage.setItem('gler_categories', JSON.stringify(categories));
+  try { await db.from('categories').insert(cat); } catch(e) {}
+  return cat;
+}
+
+async function deleteCategory(id) {
+  if (items.some(i => i.category === id)) {
+    showToast('ไม่สามารถลบได้ มีสินค้าอยู่ในหมวดนี้', 'error'); return;
+  }
+  categories = categories.filter(c => c.id !== id);
+  localStorage.setItem('gler_categories', JSON.stringify(categories));
+  try { await db.from('categories').delete().eq('id', id); } catch(e) {}
+  renderCategorySettings();
+  populateCategorySelect();
+  renderManage();
+}
+
+function renderCategorySettings() {
+  const el = document.getElementById('category-list-settings');
+  if (!el) return;
+  if (categories.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--secondary);padding:4px 0;">ยังไม่มีหมวดหมู่</div>';
+    return;
+  }
+  el.innerHTML = categories.map(c => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:18px;">${c.emoji}</span>
+      <span style="flex:1;font-size:14px;">${c.name_th}</span>
+      <button onclick="deleteCategory('${c.id}')" style="background:none;border:none;cursor:pointer;color:#c62828;padding:4px 8px;font-size:18px;min-height:36px;border-radius:var(--radius-sm);" title="ลบ">✕</button>
+    </div>
+  `).join('');
+}
+
+async function addCategoryFromSettings() {
+  const nameInp = document.getElementById('new-category-name');
+  const emojiInp = document.getElementById('new-category-emoji');
+  const cat = await addCategory(nameInp.value, emojiInp.value);
+  if (cat) {
+    nameInp.value = '';
+    emojiInp.value = '';
+    renderCategorySettings();
+    populateCategorySelect();
+    renderManage();
+    showToast('เพิ่มหมวดหมู่แล้ว ✓', 'success');
+  }
+}
+
+function populateCategorySelect(selectedId) {
+  const sel = document.getElementById('fm-category');
+  if (!sel) return;
+  sel.innerHTML = categories.map(c =>
+    `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.emoji} ${c.name_th}</option>`
+  ).join('');
+  if (selectedId && !categories.find(c => c.id === selectedId)) {
+    sel.innerHTML = `<option value="${selectedId}" selected>${selectedId}</option>` + sel.innerHTML;
   }
 }
 
