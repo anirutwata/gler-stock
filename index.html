@@ -202,6 +202,7 @@ body.lang-mm {
 .dot-red { background: #d32f2f; }
 .dot-yellow { background: #f57c00; }
 .dot-green { background: #388e3c; }
+.dot-grey { background: #bdbdbd; }
 .alert-name { flex: 1; font-size: 14px; }
 .alert-qty { font-size: 12px; color: var(--secondary); }
 .alert-badge {
@@ -381,6 +382,10 @@ body.lang-mm {
   padding: 12px 16px 8px;
   background: linear-gradient(transparent, var(--bg) 35%);
   pointer-events: none;
+  display: none;
+}
+.page.active .bottom-btn-wrap {
+  display: block;
 }
 .bottom-btn-wrap .btn-primary,
 .bottom-btn-wrap .btn-secondary {
@@ -1541,7 +1546,7 @@ function statusDotColor(status) {
   if (status === 'empty') return 'dot-red';
   if (status === 'low') return 'dot-yellow';
   if (status === 'ok') return 'dot-green';
-  return 'dot-green';
+  return 'dot-grey';
 }
 
 // ===== HOME PAGE =====
