@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>เกลอ ข้าวขาหมู - ระบบสต็อก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Noto+Sans+Myanmar:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #992F18;
+  --primary-dark: #7A2513;
+  --secondary: #AB7561;
+  --bg: #EADAC9;
+  --bg-light: #F5EFE6;
+  --gold: #A3772F;
+  --dark: #38251B;
+  --white: #FFFFFF;
+  --success: #2e7d32;
+  --warning: #e65100;
+  --border: rgba(56,37,27,0.15);
+  --shadow: 0 2px 12px rgba(56,37,27,0.12);
+  --shadow-lg: 0 8px 32px rgba(56,37,27,0.18);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'IBM Plex Sans Thai', 'Noto Sans Myanmar', sans-serif;
+  background: var(--bg);
+  color: var(--dark);
+  font-size: 15px;
+  line-height: 1.5;
+}
+body.lang-mm {
+  font-family: 'Noto Sans Myanmar', 'IBM Plex Sans Thai', sans-serif;
+}
+
+/* ===== LAYOUT ===== */
+#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+#header {
+  background: var(--primary);
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+.header-brand { display: flex; flex-direction: column; }
+.header-brand .brand-name-main {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+.header-brand .brand-name-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.lang-toggle {
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 20px;
+  display: flex;
+  overflow: hidden;
+  gap: 0;
+}
+.lang-toggle button {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 0;
+}
+.lang-toggle button.active {
+  background: rgba(255,255,255,0.25);
+  color: var(--white);
+}
+
+#main { flex: 1; overflow: hidden; position: relative; }
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 80px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  -webkit-overflow-scrolling: touch;
+}
+.page.active { opacity: 1; pointer-events: all; }
+
+/* ===== BOTTOM NAV ===== */
+#bottom-nav {
+  background: var(--white);
+  display: flex;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  box-shadow: 0 -2px 12px rgba(56,37,27,0.08);
+  z-index: 100;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px 6px;
+  cursor: pointer;
+  color: #9e8878;
+  transition: color 0.2s;
+  border: none;
+  background: none;
+  font-family: inherit;
+  gap: 3px;
+  min-height: 56px;
+}
+.nav-item.active { color: var(--primary); }
+.nav-item svg { width: 22px; height: 22px; }
+.nav-item span { font-size: 10px; font-weight: 500; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+/* ===== STATS GRID ===== */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.stat-card.span-2 { grid-column: span 2; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--primary); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--secondary); margin-top: 4px; font-weight: 500; }
+.stat-card.warning .stat-value { color: #e65100; }
+.stat-card.info .stat-value { font-size: 14px; color: var(--dark); }
+
+/* ===== QUICK ACTIONS ===== */
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.quick-btn {
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: var(--shadow);
+}
+.quick-btn:active { transform: scale(0.97); background: var(--primary-dark); }
+.quick-btn.secondary { background: var(--white); color: var(--primary); border: 2px solid var(--primary); }
+.quick-btn svg { width: 18px; height: 18px; }
+
+/* ===== ALERT LIST ===== */
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.alert-item:last-child { border-bottom: none; }
+.alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-red { background: #d32f2f; }
+.dot-yellow { background: #f57c00; }
+.dot-green { background: #388e3c; }
+.alert-name { flex: 1; font-size: 14px; }
+.alert-qty { font-size: 12px; color: var(--secondary); }
+.alert-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+.badge-empty { background: #ffebee; color: #c62828; }
+.badge-low { background: #fff3e0; color: #e65100; }
+
+/* ===== SEARCH ===== */
+.search-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--secondary);
+}
+.search-input {
+  width: 100%;
+  padding: 11px 12px 11px 36px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--white);
+  color: var(--dark);
+  outline: none;
+  transition: border-color 0.2s;
+  min-height: 44px;
+}
+.search-input:focus { border-color: var(--primary); }
+
+/* ===== CATEGORY GROUP ===== */
+.cat-group { margin-bottom: 12px; }
+.cat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--white);
+  border-radius: var(--radius);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  user-select: none;
+  transition: background 0.2s;
+}
+.cat-header:active { background: var(--bg); }
+.cat-header-left { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+.cat-header-right { display: flex; align-items: center; gap: 8px; }
+.cat-count { font-size: 12px; color: var(--secondary); }
+.cat-chevron { transition: transform 0.25s; width: 16px; height: 16px; color: var(--secondary); }
+.cat-chevron.open { transform: rotate(180deg); }
+.cat-body {
+  background: var(--white);
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+  box-shadow: 0 4px 12px rgba(56,37,27,0.08);
+}
+.cat-body.open { max-height: 2000px; }
+
+/* ===== STOCK ITEMS ===== */
+.stock-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.stock-item:last-child { border-bottom: none; }
+.item-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.item-name { flex: 1; min-width: 0; }
+.item-name-th { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-name-mm { font-size: 11px; color: var(--secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qty-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.qty-input {
+  width: 72px;
+  padding: 7px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  text-align: right;
+  background: var(--bg-light);
+  color: var(--dark);
+  outline: none;
+  min-height: 44px;
+  transition: border-color 0.2s;
+}
+.qty-input:focus { border-color: var(--primary); background: var(--white); }
+.qty-unit { font-size: 11px; color: var(--secondary); min-width: 24px; }
+
+/* ===== ORDER ITEMS ===== */
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.order-item:last-child { border-bottom: none; }
+.order-check { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; }
+.order-name { flex: 1; min-width: 0; }
+.low-warn {
+  font-size: 10px;
+  color: #e65100;
+  font-weight: 600;
+}
+
+/* ===== MANAGE ITEMS ===== */
+.manage-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.manage-item:last-child { border-bottom: none; }
+.manage-name { flex: 1; min-width: 0; }
+.manage-meta { font-size: 11px; color: var(--secondary); }
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  color: var(--secondary);
+  transition: background 0.2s, color 0.2s;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:hover { background: var(--bg); }
+.icon-btn.delete { color: #c62828; }
+.icon-btn svg { width: 18px; height: 18px; }
+
+/* ===== FAB ===== */
+.fab {
+  position: fixed;
+  bottom: 76px;
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(153,47,24,0.4);
+  z-index: 50;
+  transition: transform 0.2s, background 0.2s;
+}
+.fab:active { transform: scale(0.93); background: var(--primary-dark); }
+.fab svg { width: 24px; height: 24px; }
+
+/* ===== BOTTOM BUTTON ===== */
+.bottom-btn-wrap {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0 0;
+  background: linear-gradient(transparent, var(--bg) 30%);
+  margin: 0 -16px;
+  padding: 12px 16px 0;
+}
+.btn-primary {
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 52px;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 16px rgba(153,47,24,0.3);
+}
+.btn-primary:active { transform: scale(0.98); background: var(--primary-dark); }
+.btn-primary:disabled { background: var(--secondary); opacity: 0.6; }
+.btn-secondary {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--white);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 52px;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.btn-secondary:active { background: var(--bg); }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(56,37,27,0.5);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  display: flex;
+  align-items: flex-end;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  background: var(--white);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 90vh;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+.modal-header {
+  padding: 14px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-title { font-size: 16px; font-weight: 700; color: var(--dark); }
+.modal-close {
+  background: var(--bg);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dark);
+}
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ===== FORM ===== */
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.form-input, .form-select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--bg-light);
+  color: var(--dark);
+  outline: none;
+  transition: border-color 0.2s;
+  min-height: 44px;
+  appearance: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--primary); background: var(--white); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--bg-light);
+  color: var(--dark);
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+}
+.form-textarea:focus { border-color: var(--primary); background: var(--white); }
+
+/* ===== SETTINGS ===== */
+.settings-section { margin-bottom: 16px; }
+.settings-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.settings-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.howto-toggle {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+.howto-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s;
+}
+.howto-body.open { max-height: 300px; }
+.howto-text {
+  padding-top: 12px;
+  font-size: 13px;
+  color: var(--dark);
+  white-space: pre-line;
+  line-height: 1.7;
+  background: var(--bg-light);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 8px;
+}
+.lang-btn-group { display: flex; gap: 8px; }
+.lang-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--bg-light);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--secondary);
+  transition: all 0.2s;
+  min-height: 44px;
+}
+.lang-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--dark);
+  color: var(--white);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--success); }
+.toast.error { background: #c62828; }
+
+/* ===== PAGE HEADER ===== */
+.page-header { margin-bottom: 16px; }
+.page-title { font-size: 20px; font-weight: 700; color: var(--dark); }
+.page-sub { font-size: 13px; color: var(--secondary); margin-top: 2px; }
+
+/* ===== SUMMARY ===== */
+.summary-pre {
+  background: var(--bg-light);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: 'IBM Plex Sans Thai', monospace;
+  color: var(--dark);
+  border: 1px solid var(--border);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* ===== NOTE FIELD ===== */
+.note-wrap { margin: 12px 0; }
+
+/* ===== FILTER TABS ===== */
+.filter-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+.filter-scroll::-webkit-scrollbar { display: none; }
+.filter-tab {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--secondary);
+  transition: all 0.2s;
+  min-height: 36px;
+}
+.filter-tab.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+
+/* ===== DIVIDER ===== */
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--secondary); }
+.empty-state svg { width: 48px; height: 48px; opacity: 0.4; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(56,37,27,0.2); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <header id="header">
+    <div class="header-brand">
+      <span class="brand-name-main" id="hd-name">เกลอ ข้าวขาหมู</span>
+      <span class="brand-name-sub" id="hd-sub">ระบบจัดการสต็อก</span>
+    </div>
+    <div class="lang-toggle">
+      <button id="lang-th" class="active" onclick="setLang('th')">TH</button>
+      <button id="lang-mm" onclick="setLang('mm')">MM</button>
+    </div>
+  </header>
+
+  <!-- MAIN PAGES -->
+  <main id="main">
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="page-header">
+        <div class="page-title" id="home-title">ภาพรวม</div>
+      </div>
+      <div class="stats-grid" id="home-stats"></div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="goPage('stock')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <span id="home-qstock">เช็คสต็อก</span>
+        </button>
+        <button class="quick-btn secondary" onclick="goPage('order')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          <span id="home-qorder">สั่งซื้อ</span>
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title" id="home-alert-title">สต็อกต่ำ</div>
+        <div id="home-alert-list"></div>
+      </div>
+    </div>
+
+    <!-- STOCK CHECK -->
+    <div class="page" id="page-stock">
+      <div class="page-header">
+        <div class="page-title" id="stock-title">เช็คสต็อก</div>
+        <div class="page-sub" id="stock-sub">กรอกจำนวนสต็อกปัจจุบัน</div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" class="search-input" id="stock-search" placeholder="ค้นหา...">
+      </div>
+      <div id="stock-list"></div>
+      <div class="bottom-btn-wrap">
+        <button class="btn-primary" id="stock-btn" onclick="openStockSummary()">สรุปรายงานสต็อก</button>
+      </div>
+    </div>
+
+    <!-- ORDER -->
+    <div class="page" id="page-order">
+      <div class="page-header">
+        <div class="page-title" id="order-title">สั่งซื้อวัตถุดิบ</div>
+        <div class="page-sub" id="order-sub">เลือกรายการที่ต้องการสั่ง</div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" class="search-input" id="order-search" placeholder="ค้นหา...">
+      </div>
+      <div id="order-list"></div>
+      <div class="note-wrap">
+        <label class="form-label" id="order-note-label">หมายเหตุ</label>
+        <textarea class="form-textarea" id="order-note" placeholder="เพิ่มหมายเหตุ..."></textarea>
+      </div>
+      <div class="bottom-btn-wrap">
+        <button class="btn-primary" id="order-btn" onclick="openOrderSummary()">สรุปใบสั่งซื้อ</button>
+      </div>
+    </div>
+
+    <!-- MANAGE -->
+    <div class="page" id="page-manage">
+      <div class="page-header">
+        <div class="page-title" id="manage-title">จัดการข้อมูล</div>
+        <div class="page-sub" id="manage-sub">เพิ่ม/แก้ไข/ลบรายการ</div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" class="search-input" id="manage-search" placeholder="ค้นหา...">
+      </div>
+      <div class="filter-scroll" id="manage-filters"></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div id="manage-list"></div>
+      </div>
+      <button class="fab" onclick="openItemModal(null)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title" id="settings-title">ตั้งค่า</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title" id="settings-tg-section">Telegram</div>
+        <div class="settings-card">
+          <div class="form-group">
+            <label class="form-label" id="settings-bot-token-label">Bot Token</label>
+            <input type="text" class="form-input" id="settings-bot-token" placeholder="1234567890:ABCdef...">
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="settings-chat-id-label">Chat ID (กลุ่ม)</label>
+            <input type="text" class="form-input" id="settings-chat-id" placeholder="-100123456789">
+          </div>
+          <button class="btn-primary" id="settings-test-btn" onclick="testTelegram()" style="margin-bottom:8px;">ทดสอบส่ง</button>
+          <div class="divider"></div>
+          <div style="margin-top:12px;">
+            <button class="howto-toggle" id="howto-toggle" onclick="toggleHowTo()">
+              <span id="settings-howto-title">วิธีตั้งค่า Telegram</span>
+              <svg class="cat-chevron" id="howto-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="howto-body" id="howto-body">
+              <div class="howto-text" id="howto-text"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title" id="settings-lang-section">ภาษา</div>
+        <div class="settings-card">
+          <div class="lang-btn-group">
+            <button class="lang-btn" id="settings-lang-th" onclick="setLang('th')">🇹🇭 ภาษาไทย</button>
+            <button class="lang-btn" id="settings-lang-mm" onclick="setLang('mm')">🇲🇲 မြန်မာဘာသာ</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" id="settings-save-btn" onclick="saveSettings()">บันทึก</button>
+    </div>
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="nav-item active" data-page="home" onclick="goPage('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span id="nav-home">หน้าหลัก</span>
+    </button>
+    <button class="nav-item" data-page="stock" onclick="goPage('stock')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span id="nav-stock">สต็อก</span>
+    </button>
+    <button class="nav-item" data-page="order" onclick="goPage('order')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span id="nav-order">สั่งซื้อ</span>
+    </button>
+    <button class="nav-item" data-page="manage" onclick="goPage('manage')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span id="nav-manage">จัดการ</span>
+    </button>
+    <button class="nav-item" data-page="settings" onclick="goPage('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span id="nav-settings">ตั้งค่า</span>
+    </button>
+  </nav>
+</div>
+
+<!-- STOCK SUMMARY MODAL -->
+<div class="modal-overlay" id="stock-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="stock-modal-title">สรุปรายงานสต็อก</span>
+      <button class="modal-close" onclick="closeModal('stock-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <pre class="summary-pre" id="stock-summary-text"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="stock-send-btn" onclick="sendStockTelegram()">ส่งไปยัง Telegram</button>
+      <button class="btn-secondary" id="stock-save-btn" onclick="saveStockOnly()">บันทึกเท่านั้น</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER SUMMARY MODAL -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="order-modal-title">ใบสั่งซื้อ</span>
+      <button class="modal-close" onclick="closeModal('order-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <pre class="summary-pre" id="order-summary-text"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="order-send-btn" onclick="sendOrderTelegram()">ส่งใบสั่งซื้อ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ITEM MODAL -->
+<div class="modal-overlay" id="item-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="item-modal-title">เพิ่มรายการ</span>
+      <button class="modal-close" onclick="closeModal('item-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" id="fm-name-th-label">ชื่อ (ไทย)</label>
+        <input type="text" class="form-input" id="fm-name-th">
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="fm-name-mm-label">ชื่อ (พม่า)</label>
+        <input type="text" class="form-input" id="fm-name-mm">
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="fm-category-label">หมวดหมู่</label>
+        <select class="form-select" id="fm-category">
+          <option value="pork">🥩 เนื้อหมู</option>
+          <option value="chicken">🐔 เนื้อไก่</option>
+          <option value="ready">🥚 ของสำเร็จรูป</option>
+          <option value="seasoning">🧂 เครื่องปรุง</option>
+          <option value="vegetable">🥬 ผัก & สมุนไพร</option>
+          <option value="herb">🌿 สมุนไพรจีน</option>
+          <option value="packaging">📦 บรรจุภัณฑ์ & วัสดุ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="fm-supplier-label">ผู้จำหน่าย</label>
+        <input type="text" class="form-input" id="fm-supplier">
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label" id="fm-unit-th-label">หน่วย (ไทย)</label>
+          <input type="text" class="form-input" id="fm-unit-th">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label" id="fm-unit-mm-label">หน่วย (พม่า)</label>
+          <input type="text" class="form-input" id="fm-unit-mm">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label" id="fm-minstock-label">สต็อกขั้นต่ำ</label>
+        <input type="number" class="form-input" id="fm-minstock" step="0.1" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="fm-save-btn" onclick="saveItem()">บันทึก</button>
+      <button class="btn-secondary" id="fm-del-btn" onclick="deleteItemFromModal()" style="display:none;color:#c62828;border-color:#c62828;">ลบรายการนี้</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== TRANSLATIONS =====
+const T = {
+  th: {
+    appName: 'เกลอ ข้าวขาหมู',
+    appSub: 'ระบบจัดการสต็อก',
+    nav: { home:'หน้าหลัก', stock:'สต็อก', order:'สั่งซื้อ', manage:'จัดการ', settings:'ตั้งค่า' },
+    home: { title:'ภาพรวม', total:'รายการทั้งหมด', low:'ต้องสั่งเพิ่ม', lastCheck:'เช็คล่าสุด', noCheck:'ยังไม่ได้เช็ค', qStock:'เช็คสต็อก', qOrder:'สั่งซื้อ', alertTitle:'สต็อกต่ำ', noAlert:'สต็อกปกติทุกรายการ ✓' },
+    stock: { title:'เช็คสต็อก', sub:'กรอกจำนวนสต็อกปัจจุบัน', btn:'สรุปรายงานสต็อก', confirmTitle:'สรุปรายงานสต็อก', search:'ค้นหา...', sendBtn:'ส่งไปยัง Telegram', saveOnly:'บันทึกเท่านั้น' },
+    order: { title:'สั่งซื้อวัตถุดิบ', sub:'เลือกรายการที่ต้องการสั่ง', btn:'สรุปใบสั่งซื้อ', confirmTitle:'ใบสั่งซื้อ', search:'ค้นหา...', sendBtn:'ส่งใบสั่งซื้อ', note:'หมายเหตุ', notePH:'เพิ่มหมายเหตุ...', noItems:'กรุณาเลือกรายการ', qty:'จำนวน' },
+    manage: { title:'จัดการข้อมูล', sub:'เพิ่ม/แก้ไข/ลบรายการ', addBtn:'เพิ่มรายการ', editTitle:'แก้ไขรายการ', search:'ค้นหา...', name_th:'ชื่อ (ไทย)', name_mm:'ชื่อ (พม่า)', category:'หมวดหมู่', supplier:'ผู้จำหน่าย', unit_th:'หน่วย (ไทย)', unit_mm:'หน่วย (พม่า)', minStock:'สต็อกขั้นต่ำ', save:'บันทึก', cancel:'ยกเลิก', del:'ลบ', delConfirm:'ยืนยันลบรายการนี้?' },
+    settings: { title:'ตั้งค่า', tgSection:'Telegram', botToken:'Bot Token', chatId:'Chat ID (กลุ่ม)', testBtn:'ทดสอบส่ง', langSection:'ภาษา', howTo:'วิธีตั้งค่า Telegram', howToText:'1. สร้าง Bot ด้วย @BotFather\n2. คัดลอก Bot Token\n3. เพิ่ม Bot เข้ากลุ่ม\n4. ส่งข้อความในกลุ่ม\n5. ดู Chat ID ที่ api.telegram.org/bot{token}/getUpdates', saveBtn:'บันทึก' },
+    common: { loading:'กำลังส่ง...', success:'ส่งสำเร็จ! ✓', error:'เกิดข้อผิดพลาด', noToken:'กรุณาตั้งค่า Bot Token', noChatId:'กรุณาตั้งค่า Chat ID', saved:'บันทึกแล้ว', deleted:'ลบแล้ว', all:'ทั้งหมด', status_ok:'ปกติ', status_low:'ต่ำ', status_empty:'หมด', edit:'แก้ไข', add:'เพิ่ม', close:'ปิด' },
+    cats: { pork:'เนื้อหมู', chicken:'เนื้อไก่', ready:'ของสำเร็จรูป', seasoning:'เครื่องปรุง', vegetable:'ผัก & สมุนไพร', herb:'สมุนไพรจีน', packaging:'บรรจุภัณฑ์ & วัสดุ' },
+    catEmoji: { pork:'🥩', chicken:'🐔', ready:'🥚', seasoning:'🧂', vegetable:'🥬', herb:'🌿', packaging:'📦' }
+  },
+  mm: {
+    appName: 'ကင်နားဝက်ကြောင်း',
+    appSub: 'ကုန်ပစ္စည်းစီမံခန့်ခွဲမှုစနစ်',
+    nav: { home:'ပင်မ', stock:'စတော့', order:'မှာယူ', manage:'စီမံ', settings:'ဆက်တင်' },
+    home: { title:'အနှစ်ချုပ်', total:'ကုန်ပစ္စည်းစုစုပေါင်း', low:'မှာယူရမည်', lastCheck:'နောက်ဆုံးစစ်ဆေး', noCheck:'မစစ်ဆေးရသေး', qStock:'စတော့စစ်', qOrder:'မှာယူ', alertTitle:'စတော့နည်း', noAlert:'စတော့အားလုံးပုံမှန် ✓' },
+    stock: { title:'စတော့စစ်ဆေး', sub:'လက်ရှိစတော့ထည့်ပါ', btn:'စတော့အစီရင်ခံပို့', confirmTitle:'စတော့အစီရင်ခံ', search:'ရှာဖွေ...', sendBtn:'Telegram သို့ပို့', saveOnly:'သိမ်းရုံသာ' },
+    order: { title:'ကုန်ကြမ်းမှာယူ', sub:'မှာယူလိုသောပစ္စည်းရွေးပါ', btn:'မှာလွှာချုပ်', confirmTitle:'မှာလွှာ', search:'ရှာဖွေ...', sendBtn:'မှာလွှာပို့', note:'မှတ်ချက်', notePH:'မှတ်ချက်ထည့်ပါ...', noItems:'ပစ္စည်းရွေးပါ', qty:'ပမာဏ' },
+    manage: { title:'ဒေတာစီမံ', sub:'ထည့်/ပြင်/ဖျက်', addBtn:'ပစ္စည်းထည့်', editTitle:'ပစ္စည်းပြင်', search:'ရှာဖွေ...', name_th:'နာမည် (ထိုင်း)', name_mm:'နာမည် (မြန်မာ)', category:'အမျိုးအစား', supplier:'ပေးသူ', unit_th:'ယူနစ် (ထိုင်း)', unit_mm:'ယူနစ် (မြန်မာ)', minStock:'အနည်းဆုံးစတော့', save:'သိမ်း', cancel:'မလုပ်တော့', del:'ဖျက်', delConfirm:'ဤပစ္စည်းဖျက်မလား?' },
+    settings: { title:'ဆက်တင်', tgSection:'Telegram', botToken:'Bot Token', chatId:'Chat ID (အုပ်စု)', testBtn:'စမ်းသပ်ပို့', langSection:'ဘာသာစကား', howTo:'Telegram ဆက်တင်နည်း', howToText:'1. @BotFather ဖြင့် Bot ဆောက်\n2. Bot Token ကူးယူ\n3. Bot ကိုအုပ်စုထည့်\n4. အုပ်စုတွင်မက်ဆေ့ဂျ်ပို့\n5. api.telegram.org/bot{token}/getUpdates တွင် Chat ID ကြည့်', saveBtn:'သိမ်း' },
+    common: { loading:'ပို့နေသည်...', success:'ပို့ပြီး! ✓', error:'အမှားဖြစ်သည်', noToken:'Bot Token ဆက်တင်ပါ', noChatId:'Chat ID ဆက်တင်ပါ', saved:'သိမ်းပြီး', deleted:'ဖျက်ပြီး', all:'အားလုံး', status_ok:'ပုံမှန်', status_low:'နည်း', status_empty:'ကုန်', edit:'ပြင်', add:'ထည့်', close:'ပိတ်' },
+    cats: { pork:'ဝက်သား', chicken:'ကြက်သား', ready:'အသင့်ကုန်', seasoning:'အမွှေးအကြိုင်', vegetable:'ဟင်းသီးဟင်းရွက်', herb:'တရုတ်ဆေးဖက်ဝင်', packaging:'ထုပ်ပိုးပစ္စည်း' },
+    catEmoji: { pork:'🥩', chicken:'🐔', ready:'🥚', seasoning:'🧂', vegetable:'🥬', herb:'🌿', packaging:'📦' }
+  }
+};
+
+// ===== DEFAULT ITEMS =====
+const DEFAULT_ITEMS = [
+  {id:'p1',name_th:'ขาหน้าหมูเผา',name_mm:'ဝက်ခြေမီးကင်',category:'pork',supplier:'เบทาโกร/เฮียติ่ง',unit_th:'กก.',unit_mm:'ကီလို',minStock:10,currentStock:null},
+  {id:'p2',name_th:'เนื้อขาหมู เลาะกระดูก',name_mm:'ဝက်ခြေသား',category:'pork',supplier:'เบทาโกร',unit_th:'กก.',unit_mm:'ကီလို',minStock:5,currentStock:null},
+  {id:'p3',name_th:'คากิ',name_mm:'ကာကိ',category:'pork',supplier:'เบทาโกร',unit_th:'กก.',unit_mm:'ကီလို',minStock:3,currentStock:null},
+  {id:'p4',name_th:'ซี่โครงหมูตัดเส้น',name_mm:'ဝက်ကုက်',category:'pork',supplier:'เฮียติ่ง',unit_th:'กก.',unit_mm:'ကီလို',minStock:5,currentStock:null},
+  {id:'p5',name_th:'กระดูกซุปหมู เล้ง',name_mm:'ဝက်ရိုးဟင်းရည်',category:'pork',supplier:'เฮียติ่ง',unit_th:'กก.',unit_mm:'ကီလို',minStock:5,currentStock:null},
+  {id:'p6',name_th:'กระดูกข้อขา',name_mm:'ဝက်ဒူးရိုး',category:'pork',supplier:'เฮียติ่ง',unit_th:'กก.',unit_mm:'ကီလို',minStock:5,currentStock:null},
+  {id:'p7',name_th:'ไส้ใหญ่ดึงมัน',name_mm:'ဝက်အူကြီး',category:'pork',supplier:'มหาชัย',unit_th:'กก.',unit_mm:'ကီလို',minStock:2,currentStock:null},
+  {id:'p8',name_th:'มันหมูหั่นเต๋า',name_mm:'ဝက်ဆီတုံး',category:'pork',supplier:'มหาชัย',unit_th:'กก.',unit_mm:'ကီလို',minStock:2,currentStock:null},
+  {id:'p9',name_th:'หูหมู แช่แข็ง',name_mm:'ဝက်နား',category:'pork',supplier:'มหาชัย',unit_th:'กก.',unit_mm:'ကီလို',minStock:2,currentStock:null},
+  {id:'p10',name_th:'กุนเชียง',name_mm:'ကုန်ချင်',category:'pork',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:1,currentStock:null},
+  {id:'c1',name_th:'สะโพกไก่ติดกระดูก',name_mm:'ကြက်ပေါင်ထိပ်',category:'chicken',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:5,currentStock:null},
+  {id:'r1',name_th:'ไข่เป็ด ARO',name_mm:'ဘဲဥ',category:'ready',supplier:'Makro',unit_th:'ฟอง',unit_mm:'လုံး',minStock:30,currentStock:null},
+  {id:'r2',name_th:'ไข่ไก่',name_mm:'ကြက်ဥ',category:'ready',supplier:'Makro',unit_th:'ฟอง',unit_mm:'လုံး',minStock:150,currentStock:null},
+  {id:'r3',name_th:'ข้าวหอมมะลิ เบญจรง',name_mm:'ထမင်း',category:'ready',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:20,currentStock:null},
+  {id:'r4',name_th:'บะหมี่ไข่วิรัตน์',name_mm:'မုန့်ဟင်းခါးမျဉ်း',category:'ready',supplier:'Makro',unit_th:'ก้อน',unit_mm:'ခဲ',minStock:50,currentStock:null},
+  {id:'r5',name_th:'เต้าหู้ทอดหนา ซากุระ',name_mm:'တိုဖူး',category:'ready',supplier:'Makro',unit_th:'ก้อน',unit_mm:'ခဲ',minStock:30,currentStock:null},
+  {id:'s1',name_th:'Yamamori Shoyu ซอสถั่วเหลือง',name_mm:'ပဲငံပြာရည်',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:3,currentStock:null},
+  {id:'s2',name_th:'น้ำตาลทรายขาว มิตรผล',name_mm:'သကြားဖြူ',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:5,currentStock:null},
+  {id:'s3',name_th:'พริกไทยดำ aro',name_mm:'ငရုတ်ကောင်းမှောင်',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:1,currentStock:null},
+  {id:'s4',name_th:'เกลือปรุงทิพย์',name_mm:'ဆား',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:2,currentStock:null},
+  {id:'s5',name_th:'ภูเขาทอง ซอสปรุง',name_mm:'ဟင်းချက်ဆော့စ်',category:'seasoning',supplier:'Makro/มหาชัย',unit_th:'ขวด',unit_mm:'ဘူး',minStock:3,currentStock:null},
+  {id:'s6',name_th:'เด็กสมบูรณ์ ซีอิ๊วขาว',name_mm:'ပဲငံပြာရည်ဖြူ',category:'seasoning',supplier:'Makro/มหาชัย',unit_th:'ขวด',unit_mm:'ဘူး',minStock:3,currentStock:null},
+  {id:'s7',name_th:'น้ำตาลมะพร้าว',name_mm:'အုန်းသကြား',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:2,currentStock:null},
+  {id:'s8',name_th:'คิวพี น้ำส้มสายชู',name_mm:'ချဉ်',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s9',name_th:'น้ำตาลทรายแดง มิตรผล',name_mm:'သကြားညိုမ',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:2,currentStock:null},
+  {id:'s10',name_th:'รสดี ซุปก้อนหมูกระดูก',name_mm:'ဝက်ရိုးဟင်းရည်',category:'seasoning',supplier:'Makro',unit_th:'กล่อง',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s11',name_th:'ผงชูรส อายิโนะโมะโต๊ะ',name_mm:'အာဂျီ',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.5,currentStock:null},
+  {id:'s12',name_th:'ลีกุมกี่ ซอสหอยนางรม',name_mm:'ကမာငံပြာ',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s13',name_th:'ง่วนเชียง ซีอิ๊วหวาน',name_mm:'ချိုသောပဲငံပြာ',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s14',name_th:'น้ำตาลกรวด วังขนาย',name_mm:'ကျောက်သကြား',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:1,currentStock:null},
+  {id:'s15',name_th:'พริกไทยขาวป่น',name_mm:'ငရုတ်ကောင်းဖြူ',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s16',name_th:'น้ำมันปาล์ม ปี๊บ',name_mm:'ပန်းသီးဆီ',category:'seasoning',supplier:'Makro',unit_th:'ปี๊บ',unit_mm:'ပိဉ်',minStock:1,currentStock:null},
+  {id:'s17',name_th:'น้ำมันงา ตรามังกรคู่',name_mm:'နှမ်းဆီ',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s18',name_th:'น้ำมะนาวแช่แข็ง',name_mm:'သံပရာနှစ်ရည်',category:'seasoning',supplier:'มหาชัย',unit_th:'ถุง',unit_mm:'အိတ်',minStock:3,currentStock:null},
+  {id:'s19',name_th:'ซีอิ๊วหวาน ตราธงคู่ จี้แช',name_mm:'ချိုသောပဲငံပြာ2',category:'seasoning',supplier:'Shopee',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s20',name_th:'น้ำซุปหมูสูตรเข้มข้น',name_mm:'ဝက်ဟင်းရည်သုပ်',category:'seasoning',supplier:'เบทาโกร',unit_th:'ถุง',unit_mm:'အိတ်',minStock:5,currentStock:null},
+  {id:'s21',name_th:'น้ำมันพริก เหล่ากานมา',name_mm:'ငရုတ်ဆီ',category:'seasoning',supplier:'Makro/Go Wholesale',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s22',name_th:'เม็ดหม่าล่า ฮวาเจียว',name_mm:'မာလာကဆုပ်',category:'seasoning',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.5,currentStock:null},
+  {id:'s23',name_th:'เอโร่ สาเกปรุงอาหาร',name_mm:'ဆာကေ',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s24',name_th:'ฮอนดาชิ ผงปรุง',name_mm:'ဟွန်ဒါချိ',category:'seasoning',supplier:'Makro',unit_th:'ถุง',unit_mm:'အိတ်',minStock:2,currentStock:null},
+  {id:'v1',name_th:'เม็ดผักชี',name_mm:'နွားသလဲစေ့',category:'vegetable',supplier:'Makro/มหาชัย',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'v2',name_th:'ข่าอบแห้ง',name_mm:'ကျည်ပေါင်ခြောက်',category:'vegetable',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'v3',name_th:'อบเชยแท่ง Cinnamon',name_mm:'သပြေကြောင်း',category:'vegetable',supplier:'Makro/มหาชัย',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'v4',name_th:'โป้ยกั๊ก',name_mm:'ကြယ်ပွင့်',category:'vegetable',supplier:'Makro/มหาชัย',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'v5',name_th:'ข่าอ่อน สด',name_mm:'ကျည်ပေါင်',category:'vegetable',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.5,currentStock:null},
+  {id:'v6',name_th:'ขิงแก่ สด',name_mm:'နနတ်',category:'vegetable',supplier:'Makro/ขอนแก่นผักสด',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.5,currentStock:null},
+  {id:'v7',name_th:'พริกเหลือง',name_mm:'ငရုတ်ဝါ',category:'vegetable',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'v8',name_th:'รากผักชี',name_mm:'နွားသလဲမြစ်',category:'vegetable',supplier:'Makro/ขอนแก่นผักสด',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'v9',name_th:'กระเทียมไทย แกะกลีบ',name_mm:'ကြက်သွန်ဖြူ',category:'vegetable',supplier:'Makro/ขอนแก่นผักสด',unit_th:'กก.',unit_mm:'ကီလို',minStock:1,currentStock:null},
+  {id:'v10',name_th:'ผักกาดดองเปรี้ยว',name_mm:'မုန်ညင်းချဉ်',category:'vegetable',supplier:'Makro/ขอนแก่นผักสด',unit_th:'กก.',unit_mm:'ကီလို',minStock:2,currentStock:null},
+  {id:'v11',name_th:'กระเทียมจีน',name_mm:'တရုတ်ကြက်သွန်ဖြူ',category:'vegetable',supplier:'Makro/ขอนแก่นผักสด',unit_th:'กก.',unit_mm:'ကီလို',minStock:1,currentStock:null},
+  {id:'v12',name_th:'กระเทียมดอง แม่จินต์',name_mm:'ကြက်သွန်ဖြူချဉ်',category:'vegetable',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.5,currentStock:null},
+  {id:'v13',name_th:'เห็ดหอม',name_mm:'မှိုရနံ့',category:'vegetable',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'v14',name_th:'พริกขี้หนู',name_mm:'ငရုတ်သီးသေး',category:'vegetable',supplier:'ขอนแก่นผักสด',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'v15',name_th:'มะระจีน',name_mm:'ဆလာကျားသီး',category:'vegetable',supplier:'ขอนแก่นผักสด',unit_th:'กก.',unit_mm:'ကီလို',minStock:1,currentStock:null},
+  {id:'v16',name_th:'งาขาว',name_mm:'နှမ်းဖြူ',category:'vegetable',supplier:'Makro',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'h1',name_th:'เม็ดเฉาก๊วย',name_mm:'ကန်ကျောဆေးစေ့',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.3,currentStock:null},
+  {id:'h2',name_th:'กำเช่า ชะเอมเทศ',name_mm:'ချိုဆေး',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'h3',name_th:'ปักคี้',name_mm:'ပကီ',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'h4',name_th:'ฮวยซัว',name_mm:'ဖွားဆွာ',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'h5',name_th:'เก๋ากี้',name_mm:'ကော်ကီး',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'h6',name_th:'ตังกุย',name_mm:'တန်ကွေး',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'h7',name_th:'ตังเซียม',name_mm:'တန်ဆယ်',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  {id:'h8',name_th:'พุทราจีน',name_mm:'တရုတ်ဆီးသီး',category:'herb',supplier:'Shopee',unit_th:'กก.',unit_mm:'ကီလို',minStock:0.2,currentStock:null},
+  // เครื่องปรุงเพิ่มเติม (จาก PDF สต็อก)
+  {id:'s26',name_th:'ซอสเหยาะ แม็กกี้',name_mm:'မာကီဆော့စ်',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s27',name_th:'คนอร์ไก่ ซุปก้อน',name_mm:'ကြောင်ဟင်းရည်ပြုတ်',category:'seasoning',supplier:'Makro',unit_th:'กล่อง',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s28',name_th:'ซวงเจียแดง',name_mm:'ဆွမ်ကျာနီ',category:'seasoning',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s29',name_th:'ชาจีน',name_mm:'တရုတ်လက်ဖက်',category:'seasoning',supplier:'Makro',unit_th:'กล่อง',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'s30',name_th:'น้ำแร่',name_mm:'သဘာဝရေ',category:'seasoning',supplier:'Makro',unit_th:'แพ็ก',unit_mm:'ပက်',minStock:5,currentStock:null},
+  // บรรจุภัณฑ์ & วัสดุสิ้นเปลือง (จาก PDF สต็อก - มหาชัย/แม็คโคร)
+  {id:'pk1',name_th:'ถุง 9×8',name_mm:'အိတ် 9×8',category:'packaging',supplier:'มหาชัย',unit_th:'ม้วน',unit_mm:'တိုင်',minStock:5,currentStock:null},
+  {id:'pk2',name_th:'ถุงน้ำราด 5×8',name_mm:'ဟင်းချောင်းအိတ် 5×8',category:'packaging',supplier:'มหาชัย',unit_th:'ม้วน',unit_mm:'တိုင်',minStock:5,currentStock:null},
+  {id:'pk3',name_th:'ถุงพริกกระเทียม 3×5',name_mm:'ငရုတ်ကြက်သွန်အိတ် 3×5',category:'packaging',supplier:'มหาชัย',unit_th:'ม้วน',unit_mm:'တိုင်',minStock:3,currentStock:null},
+  {id:'pk4',name_th:'กล่องใสขาวสีดำ',name_mm:'အမဲဘူး',category:'packaging',supplier:'มหาชัย',unit_th:'ใบ',unit_mm:'ဘူး',minStock:200,currentStock:null},
+  {id:'pk5',name_th:'กล่องใสขาวสีขาว',name_mm:'အဖြူဘူး',category:'packaging',supplier:'มหาชัย',unit_th:'ใบ',unit_mm:'ဘူး',minStock:200,currentStock:null},
+  {id:'pk6',name_th:'ถ้วยน้ำจิ้ม',name_mm:'ငံပြာရည်ခွက်',category:'packaging',supplier:'มหาชัย',unit_th:'ใบ',unit_mm:'ခွက်',minStock:200,currentStock:null},
+  {id:'pk7',name_th:'ทิชชูวางโต๊ะ',name_mm:'စားပွဲတင်တစ်ရႈ',category:'packaging',supplier:'มหาชัย',unit_th:'ห่อ',unit_mm:'ထုပ်',minStock:10,currentStock:null},
+  {id:'pk8',name_th:'หลอด',name_mm:'စုပ်ပြွန်',category:'packaging',supplier:'มหาชัย',unit_th:'แพ็ก',unit_mm:'ပက်',minStock:5,currentStock:null},
+  {id:'pk9',name_th:'ยางรัด',name_mm:'ကျည်ကြိုး',category:'packaging',supplier:'มหาชัย',unit_th:'ถุง',unit_mm:'အိတ်',minStock:2,currentStock:null},
+  {id:'pk10',name_th:'ถุงมือสีดำ',name_mm:'လက်အိတ်နက်',category:'packaging',supplier:'มหาชัย',unit_th:'กล่อง',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'pk11',name_th:'ถุงขยะ',name_mm:'အမှိုက်အိတ်',category:'packaging',supplier:'มหาชัย',unit_th:'ม้วน',unit_mm:'တိုင်',minStock:3,currentStock:null},
+  {id:'pk12',name_th:'แผ่นแรป',name_mm:'ကလပ်ရပ်',category:'packaging',supplier:'มหาชัย',unit_th:'ม้วน',unit_mm:'တိုင်',minStock:2,currentStock:null},
+  {id:'pk13',name_th:'เทปใส',name_mm:'ကြည်တိတ်',category:'packaging',supplier:'มหาชัย',unit_th:'ม้วน',unit_mm:'တိုင်',minStock:3,currentStock:null},
+  {id:'pk14',name_th:'ลูกแม็ก',name_mm:'မင်ကျည်',category:'packaging',supplier:'มหาชัย',unit_th:'กล่อง',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'pk15',name_th:'น้ำยาล้างจาน',name_mm:'ပန်းကန်ဆေးရည်',category:'packaging',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:3,currentStock:null},
+  {id:'pk16',name_th:'น้ำยาถูพื้น',name_mm:'ကြမ်းပြင်ဆေးရည်',category:'packaging',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+  {id:'pk17',name_th:'น้ำยาเช็ดโต๊ะ',name_mm:'စားပွဲဆေးရည်',category:'packaging',supplier:'Makro',unit_th:'ขวด',unit_mm:'ဘူး',minStock:2,currentStock:null},
+];
+
+const CAT_ORDER = ['pork','chicken','ready','seasoning','vegetable','herb','packaging'];
+
+// ===== STATE =====
+let lang = 'th';
+let items = [];
+let settings = { botToken: '', chatId: '' };
+let lastCheck = null;
+let currentPage = 'home';
+let editingItemId = null;
+let manageFilterCat = 'all';
+let stockSearchQ = '';
+let orderSearchQ = '';
+let manageSearchQ = '';
+let catOpenState = {}; // track which categories are open per page
+let orderChecked = {}; // {itemId: {checked, qty}}
+
+// ===== INIT =====
+function init() {
+  const savedItems = localStorage.getItem('gler_items');
+  if (savedItems) {
+    items = JSON.parse(savedItems);
+    // Migrate: ensure all default items exist
+    DEFAULT_ITEMS.forEach(di => {
+      if (!items.find(i => i.id === di.id)) {
+        items.push({...di});
+      }
+    });
+  } else {
+    items = DEFAULT_ITEMS.map(i => ({...i}));
+  }
+  const savedSettings = localStorage.getItem('gler_settings');
+  if (savedSettings) settings = JSON.parse(savedSettings);
+  const savedCheck = localStorage.getItem('gler_lastCheck');
+  if (savedCheck) lastCheck = savedCheck;
+  const savedLang = localStorage.getItem('gler_lang');
+  if (savedLang) lang = savedLang;
+
+  // init order checked state
+  items.forEach(it => {
+    if (!orderChecked[it.id]) orderChecked[it.id] = { checked: false, qty: '' };
+  });
+
+  applyLang();
+  renderHome();
+  renderStock();
+  renderOrder();
+  renderManage();
+  loadSettingsUI();
+
+  document.getElementById('stock-search').addEventListener('input', e => {
+    stockSearchQ = e.target.value.toLowerCase();
+    renderStock();
+  });
+  document.getElementById('order-search').addEventListener('input', e => {
+    orderSearchQ = e.target.value.toLowerCase();
+    renderOrder();
+  });
+  document.getElementById('manage-search').addEventListener('input', e => {
+    manageSearchQ = e.target.value.toLowerCase();
+    renderManage();
+  });
+}
+
+function saveItems() {
+  localStorage.setItem('gler_items', JSON.stringify(items));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// ===== LANG =====
+function t(section, key) {
+  const s = T[lang][section];
+  return s ? (s[key] || '') : '';
+}
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('gler_lang', l);
+  applyLang();
+  renderHome();
+  renderStock();
+  renderOrder();
+  renderManage();
+  loadSettingsUI();
+}
+
+function applyLang() {
+  const L = T[lang];
+  document.body.classList.toggle('lang-mm', lang === 'mm');
+  document.getElementById('hd-name').textContent = L.appName;
+  document.getElementById('hd-sub').textContent = L.appSub;
+  document.getElementById('lang-th').classList.toggle('active', lang === 'th');
+  document.getElementById('lang-mm').classList.toggle('active', lang === 'mm');
+  // nav
+  document.getElementById('nav-home').textContent = L.nav.home;
+  document.getElementById('nav-stock').textContent = L.nav.stock;
+  document.getElementById('nav-order').textContent = L.nav.order;
+  document.getElementById('nav-manage').textContent = L.nav.manage;
+  document.getElementById('nav-settings').textContent = L.nav.settings;
+  // home
+  document.getElementById('home-title').textContent = L.home.title;
+  document.getElementById('home-qstock').textContent = L.home.qStock;
+  document.getElementById('home-qorder').textContent = L.home.qOrder;
+  document.getElementById('home-alert-title').textContent = L.home.alertTitle;
+  // stock
+  document.getElementById('stock-title').textContent = L.stock.title;
+  document.getElementById('stock-sub').textContent = L.stock.sub;
+  document.getElementById('stock-btn').textContent = L.stock.btn;
+  document.getElementById('stock-search').placeholder = L.stock.search;
+  document.getElementById('stock-modal-title').textContent = L.stock.confirmTitle;
+  document.getElementById('stock-send-btn').textContent = L.stock.sendBtn;
+  document.getElementById('stock-save-btn').textContent = L.stock.saveOnly;
+  // order
+  document.getElementById('order-title').textContent = L.order.title;
+  document.getElementById('order-sub').textContent = L.order.sub;
+  document.getElementById('order-btn').textContent = L.order.btn;
+  document.getElementById('order-search').placeholder = L.order.search;
+  document.getElementById('order-note-label').textContent = L.order.note;
+  document.getElementById('order-note').placeholder = L.order.notePH;
+  document.getElementById('order-modal-title').textContent = L.order.confirmTitle;
+  document.getElementById('order-send-btn').textContent = L.order.sendBtn;
+  // manage
+  document.getElementById('manage-title').textContent = L.manage.title;
+  document.getElementById('manage-sub').textContent = L.manage.sub;
+  document.getElementById('manage-search').placeholder = L.manage.search;
+  // settings
+  document.getElementById('settings-title').textContent = L.settings.title;
+  document.getElementById('settings-tg-section').textContent = L.settings.tgSection;
+  document.getElementById('settings-bot-token-label').textContent = L.settings.botToken;
+  document.getElementById('settings-chat-id-label').textContent = L.settings.chatId;
+  document.getElementById('settings-test-btn').textContent = L.settings.testBtn;
+  document.getElementById('settings-lang-section').textContent = L.settings.langSection;
+  document.getElementById('howto-text').textContent = L.settings.howToText;
+  document.getElementById('settings-howto-title').textContent = L.settings.howTo;
+  document.getElementById('settings-save-btn').textContent = L.settings.saveBtn;
+  document.getElementById('settings-lang-th').classList.toggle('active', lang === 'th');
+  document.getElementById('settings-lang-mm').classList.toggle('active', lang === 'mm');
+  // item modal form
+  document.getElementById('fm-name-th-label').textContent = L.manage.name_th;
+  document.getElementById('fm-name-mm-label').textContent = L.manage.name_mm;
+  document.getElementById('fm-category-label').textContent = L.manage.category;
+  document.getElementById('fm-supplier-label').textContent = L.manage.supplier;
+  document.getElementById('fm-unit-th-label').textContent = L.manage.unit_th;
+  document.getElementById('fm-unit-mm-label').textContent = L.manage.unit_mm;
+  document.getElementById('fm-minstock-label').textContent = L.manage.minStock;
+  document.getElementById('fm-save-btn').textContent = L.manage.save;
+  document.getElementById('fm-del-btn').textContent = L.manage.del;
+  // update fm-category options
+  const catSel = document.getElementById('fm-category');
+  catSel.innerHTML = CAT_ORDER.map(c =>
+    `<option value="${c}">${T[lang].catEmoji[c]} ${T[lang].cats[c]}</option>`
+  ).join('');
+}
+
+// ===== NAVIGATION =====
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  currentPage = page;
+  if (page === 'home') renderHome();
+  if (page === 'manage') renderManage();
+}
+
+// ===== STATUS =====
+function getStatus(item) {
+  if (item.currentStock === null || item.currentStock === undefined) return 'unknown';
+  const s = parseFloat(item.currentStock);
+  if (s <= 0) return 'empty';
+  if (s <= item.minStock) return 'low';
+  return 'ok';
+}
+
+function statusDotColor(status) {
+  if (status === 'empty') return 'dot-red';
+  if (status === 'low') return 'dot-yellow';
+  if (status === 'ok') return 'dot-green';
+  return 'dot-green';
+}
+
+// ===== HOME PAGE =====
+function renderHome() {
+  const L = T[lang];
+  const total = items.length;
+  const lowItems = items.filter(i => {
+    const s = i.currentStock !== null ? parseFloat(i.currentStock) : null;
+    return s !== null && s <= i.minStock;
+  });
+  const lowCount = lowItems.length;
+
+  let lastCheckStr = L.home.noCheck;
+  if (lastCheck) {
+    const d = new Date(lastCheck);
+    lastCheckStr = d.toLocaleDateString(lang === 'th' ? 'th-TH' : 'my-MM', {day:'2-digit',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+  }
+
+  document.getElementById('home-stats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value">${total}</div>
+      <div class="stat-label">${L.home.total}</div>
+    </div>
+    <div class="stat-card${lowCount > 0 ? ' warning' : ''}">
+      <div class="stat-value">${lowCount}</div>
+      <div class="stat-label">${L.home.low}</div>
+    </div>
+    <div class="stat-card span-2 info">
+      <div class="stat-label">${L.home.lastCheck}</div>
+      <div class="stat-value" style="font-size:13px;margin-top:4px;">${lastCheckStr}</div>
+    </div>
+  `;
+
+  const alertList = document.getElementById('home-alert-list');
+  if (lowItems.length === 0) {
+    alertList.innerHTML = `<div style="text-align:center;padding:16px;color:var(--secondary);font-size:14px;">${L.home.noAlert}</div>`;
+  } else {
+    const sorted = [...lowItems].sort((a,b) => {
+      const sa = parseFloat(a.currentStock||0), sb = parseFloat(b.currentStock||0);
+      return sa - sb;
+    });
+    alertList.innerHTML = sorted.map(item => {
+      const status = getStatus(item);
+      const dotClass = status === 'empty' ? 'dot-red' : 'dot-yellow';
+      const badgeClass = status === 'empty' ? 'badge-empty' : 'badge-low';
+      const badgeText = status === 'empty' ? L.common.status_empty : L.common.status_low;
+      const name = lang === 'mm' ? item.name_mm : item.name_th;
+      const unit = lang === 'mm' ? item.unit_mm : item.unit_th;
+      const qty = item.currentStock !== null ? `${item.currentStock} ${unit}` : '-';
+      return `
+        <div class="alert-item">
+          <div class="alert-dot ${dotClass}"></div>
+          <div class="alert-name" style="font-size:13px;">${name}</div>
+          <div class="alert-qty">${qty}</div>
+          <span class="alert-badge ${badgeClass}">${badgeText}</span>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// ===== STOCK PAGE =====
+function renderStock() {
+  const L = T[lang];
+  const q = stockSearchQ;
+  let filtered = items;
+  if (q) filtered = items.filter(i =>
+    i.name_th.toLowerCase().includes(q) ||
+    i.name_mm.toLowerCase().includes(q) ||
+    i.supplier.toLowerCase().includes(q)
+  );
+
+  const grouped = {};
+  CAT_ORDER.forEach(c => { grouped[c] = []; });
+  filtered.forEach(i => {
+    if (grouped[i.category]) grouped[i.category].push(i);
+  });
+
+  let html = '';
+  CAT_ORDER.forEach(cat => {
+    const catItems = grouped[cat];
+    if (catItems.length === 0) return;
+    const isOpen = catOpenState['stock_' + cat] !== false; // default open
+    const emoji = T[lang].catEmoji[cat];
+    const catName = T[lang].cats[cat];
+    html += `
+      <div class="cat-group">
+        <div class="cat-header" onclick="toggleCat('stock','${cat}')">
+          <div class="cat-header-left">${emoji} ${catName}</div>
+          <div class="cat-header-right">
+            <span class="cat-count">${catItems.length}</span>
+            <svg class="cat-chevron ${isOpen ? 'open' : ''}" id="sc-chev-${cat}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="cat-body ${isOpen ? 'open' : ''}" id="sc-body-${cat}">
+          ${catItems.map(item => {
+            const status = getStatus(item);
+            const dotClass = statusDotColor(status);
+            const name = lang === 'mm' ? item.name_mm : item.name_th;
+            const unit = lang === 'mm' ? item.unit_mm : item.unit_th;
+            const val = item.currentStock !== null ? item.currentStock : '';
+            return `
+              <div class="stock-item">
+                <div class="item-status ${dotClass}"></div>
+                <div class="item-name">
+                  <div class="item-name-th">${name}</div>
+                  ${lang === 'th' ? `<div class="item-name-mm" style="font-family:'Noto Sans Myanmar',sans-serif;">${item.name_mm}</div>` : `<div class="item-name-mm">${item.name_th}</div>`}
+                </div>
+                <div class="qty-wrap">
+                  <input type="number" class="qty-input" value="${val}" placeholder="0"
+                    min="0" step="0.1"
+                    onchange="updateStock('${item.id}', this.value)"
+                    oninput="updateStockLive('${item.id}', this.value)">
+                  <span class="qty-unit">${unit}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById('stock-list').innerHTML = html || `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p>ไม่พบรายการ</p></div>`;
+}
+
+function toggleCat(page, cat) {
+  const key = page + '_' + cat;
+  catOpenState[key] = catOpenState[key] === false ? true : false;
+  const body = document.getElementById(`${page === 'stock' ? 'sc' : page === 'order' ? 'oc' : 'oc'}-body-${cat}`);
+  const chev = document.getElementById(`${page === 'stock' ? 'sc' : page === 'order' ? 'oc' : 'oc'}-chev-${cat}`);
+  if (body) body.classList.toggle('open', catOpenState[key] !== false);
+  if (chev) chev.classList.toggle('open', catOpenState[key] !== false);
+}
+
+function updateStock(id, val) {
+  const item = items.find(i => i.id === id);
+  if (item) {
+    item.currentStock = val === '' ? null : parseFloat(val);
+    saveItems();
+    // update status dot
+    const status = getStatus(item);
+    const inputs = document.querySelectorAll(`input[onchange*="${id}"]`);
+    inputs.forEach(inp => {
+      const dot = inp.closest('.stock-item')?.querySelector('.item-status');
+      if (dot) {
+        dot.className = 'item-status ' + statusDotColor(status);
+      }
+    });
+  }
+}
+
+function updateStockLive(id, val) {
+  // just update dot color without saving
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const tmpStock = val === '' ? null : parseFloat(val);
+  let status;
+  if (tmpStock === null) status = 'unknown';
+  else if (tmpStock <= 0) status = 'empty';
+  else if (tmpStock <= item.minStock) status = 'low';
+  else status = 'ok';
+  const inputs = document.querySelectorAll(`input[oninput*="${id}"]`);
+  inputs.forEach(inp => {
+    const dot = inp.closest('.stock-item')?.querySelector('.item-status');
+    if (dot) dot.className = 'item-status ' + statusDotColor(status);
+  });
+}
+
+function openStockSummary() {
+  // Save all current input values first
+  document.querySelectorAll('#stock-list .qty-input').forEach(inp => {
+    const onchg = inp.getAttribute('onchange') || '';
+    const match = onchg.match(/'([^']+)'/);
+    if (match) updateStock(match[1], inp.value);
+  });
+
+  const msg = buildStockMessage();
+  document.getElementById('stock-summary-text').textContent = msg;
+  openModal('stock-modal');
+}
+
+function buildStockMessage() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH', {day:'2-digit',month:'short',year:'numeric'});
+  const timeStr = now.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+
+  let msg = `📦 สรุปสต็อก เกลอ ข้าวขาหมู\n📅 ${dateStr} | ${timeStr} น.\n━━━━━━━━━━━━━━━━\n`;
+
+  let okCount = 0, lowCount = 0, emptyCount = 0;
+
+  CAT_ORDER.forEach(cat => {
+    const catItems = items.filter(i => i.category === cat);
+    if (catItems.length === 0) return;
+    const emoji = T.th.catEmoji[cat];
+    const catName = T.th.cats[cat];
+    msg += `\n${emoji} ${catName}\n`;
+    catItems.forEach(item => {
+      const s = item.currentStock;
+      const qty = s !== null && s !== undefined ? s : '-';
+      const unit = item.unit_th;
+      const status = getStatus(item);
+      let icon = '✅';
+      if (status === 'empty') { icon = '❌'; emptyCount++; }
+      else if (status === 'low') { icon = '⚠️'; lowCount++; }
+      else { okCount++; }
+      const statusLabel = status === 'empty' ? ' หมด!' : status === 'low' ? ' ต่ำ' : '';
+      msg += `• ${item.name_th}: ${qty} ${unit} ${icon}${statusLabel}\n`;
+    });
+  });
+
+  msg += `\n━━━━━━━━━━━━━━━━\n📊 ปกติ: ${okCount} | ⚠️ ต่ำ: ${lowCount} | ❌ หมด: ${emptyCount}`;
+  return msg;
+}
+
+async function sendStockTelegram() {
+  if (!settings.botToken) { showToast(T[lang].common.noToken, 'error'); return; }
+  if (!settings.chatId) { showToast(T[lang].common.noChatId, 'error'); return; }
+  const btn = document.getElementById('stock-send-btn');
+  btn.textContent = T[lang].common.loading;
+  btn.disabled = true;
+  const msg = document.getElementById('stock-summary-text').textContent;
+  const ok = await sendTelegram(msg);
+  btn.textContent = T[lang].stock.sendBtn;
+  btn.disabled = false;
+  if (ok) {
+    lastCheck = new Date().toISOString();
+    localStorage.setItem('gler_lastCheck', lastCheck);
+    showToast(T[lang].common.success, 'success');
+    closeModal('stock-modal');
+    renderHome();
+  } else {
+    showToast(T[lang].common.error, 'error');
+  }
+}
+
+function saveStockOnly() {
+  lastCheck = new Date().toISOString();
+  localStorage.setItem('gler_lastCheck', lastCheck);
+  saveItems();
+  closeModal('stock-modal');
+  showToast(T[lang].common.saved, 'success');
+  renderHome();
+}
+
+// ===== ORDER PAGE =====
+function renderOrder() {
+  const L = T[lang];
+  const q = orderSearchQ;
+  let filtered = items;
+  if (q) filtered = items.filter(i =>
+    i.name_th.toLowerCase().includes(q) ||
+    i.name_mm.toLowerCase().includes(q) ||
+    i.supplier.toLowerCase().includes(q)
+  );
+
+  // Group by supplier
+  const suppliers = {};
+  filtered.forEach(item => {
+    const sup = item.supplier;
+    if (!suppliers[sup]) suppliers[sup] = [];
+    suppliers[sup].push(item);
+  });
+
+  let html = '';
+  Object.keys(suppliers).sort().forEach(sup => {
+    const supItems = suppliers[sup];
+    const isOpen = catOpenState['order_' + sup] !== false;
+    const safeKey = sup.replace(/[^a-zA-Z0-9]/g, '_');
+    html += `
+      <div class="cat-group">
+        <div class="cat-header" onclick="toggleOrderSup('${safeKey}','${sup.replace(/'/g,"\\'")}')">
+          <div class="cat-header-left">🏪 ${sup}</div>
+          <div class="cat-header-right">
+            <span class="cat-count">${supItems.length}</span>
+            <svg class="cat-chevron ${isOpen ? 'open' : ''}" id="oc-chev-${safeKey}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="cat-body ${isOpen ? 'open' : ''}" id="oc-body-${safeKey}">
+          ${supItems.map(item => {
+            const checked = orderChecked[item.id]?.checked || false;
+            const qty = orderChecked[item.id]?.qty || '';
+            const name = lang === 'mm' ? item.name_mm : item.name_th;
+            const unit = lang === 'mm' ? item.unit_mm : item.unit_th;
+            const status = getStatus(item);
+            const isLow = status === 'low' || status === 'empty';
+            return `
+              <div class="order-item">
+                <input type="checkbox" class="order-check" ${checked ? 'checked' : ''}
+                  onchange="toggleOrderItem('${item.id}', this.checked)">
+                <div class="order-name">
+                  <div style="font-size:13px;font-weight:500;">${name}${isLow ? ` <span class="low-warn">⚠️</span>` : ''}</div>
+                  ${lang === 'th' ? `<div style="font-size:11px;color:var(--secondary);font-family:'Noto Sans Myanmar',sans-serif;">${item.name_mm}</div>` : `<div style="font-size:11px;color:var(--secondary);">${item.name_th}</div>`}
+                </div>
+                <div class="qty-wrap">
+                  <input type="number" class="qty-input" value="${qty}" placeholder="0"
+                    min="0" step="0.1"
+                    onchange="updateOrderQty('${item.id}', this.value)"
+                    ${!checked ? 'disabled style="opacity:0.4"' : ''}
+                    id="oq-${item.id}">
+                  <span class="qty-unit">${unit}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById('order-list').innerHTML = html || `<div class="empty-state"><p>ไม่พบรายการ</p></div>`;
+}
+
+function toggleOrderSup(safeKey, sup) {
+  const key = 'order_' + sup;
+  catOpenState[key] = catOpenState[key] === false ? true : false;
+  const body = document.getElementById('oc-body-' + safeKey);
+  const chev = document.getElementById('oc-chev-' + safeKey);
+  if (body) body.classList.toggle('open', catOpenState[key] !== false);
+  if (chev) chev.classList.toggle('open', catOpenState[key] !== false);
+}
+
+function toggleOrderItem(id, checked) {
+  if (!orderChecked[id]) orderChecked[id] = { checked: false, qty: '' };
+  orderChecked[id].checked = checked;
+  const qtyInp = document.getElementById('oq-' + id);
+  if (qtyInp) {
+    qtyInp.disabled = !checked;
+    qtyInp.style.opacity = checked ? '1' : '0.4';
+  }
+}
+
+function updateOrderQty(id, val) {
+  if (!orderChecked[id]) orderChecked[id] = { checked: true, qty: val };
+  else orderChecked[id].qty = val;
+}
+
+function openOrderSummary() {
+  // collect current values
+  document.querySelectorAll('[id^="oq-"]').forEach(inp => {
+    const id = inp.id.replace('oq-','');
+    if (orderChecked[id]) orderChecked[id].qty = inp.value;
+  });
+
+  const selectedItems = items.filter(i => orderChecked[i.id]?.checked);
+  if (selectedItems.length === 0) {
+    showToast(T[lang].order.noItems, 'error');
+    return;
+  }
+  const note = document.getElementById('order-note').value;
+  const msg = buildOrderMessage(selectedItems, note);
+  document.getElementById('order-summary-text').textContent = msg;
+  openModal('order-modal');
+}
+
+function buildOrderMessage(selectedItems, note) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH', {day:'2-digit',month:'short',year:'numeric'});
+  const timeStr = now.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+
+  let msg = `🛒 ใบสั่งซื้อ เกลอ ข้าวขาหมู\n📅 ${dateStr} | ${timeStr} น.\n━━━━━━━━━━━━━━━━\n`;
+
+  const grouped = {};
+  selectedItems.forEach(item => {
+    if (!grouped[item.supplier]) grouped[item.supplier] = [];
+    grouped[item.supplier].push(item);
+  });
+
+  Object.keys(grouped).sort().forEach(sup => {
+    msg += `\n🏪 ${sup}\n`;
+    grouped[sup].forEach((item, idx) => {
+      const qty = orderChecked[item.id]?.qty || '-';
+      msg += `${idx+1}. ${item.name_th} — ${qty} ${item.unit_th}\n`;
+    });
+  });
+
+  msg += `\n━━━━━━━━━━━━━━━━\n📦 รวม ${selectedItems.length} รายการ`;
+  if (note) msg += `\n📝 หมายเหตุ: ${note}`;
+  return msg;
+}
+
+async function sendOrderTelegram() {
+  if (!settings.botToken) { showToast(T[lang].common.noToken, 'error'); return; }
+  if (!settings.chatId) { showToast(T[lang].common.noChatId, 'error'); return; }
+  const btn = document.getElementById('order-send-btn');
+  btn.textContent = T[lang].common.loading;
+  btn.disabled = true;
+  const msg = document.getElementById('order-summary-text').textContent;
+  const ok = await sendTelegram(msg);
+  btn.textContent = T[lang].order.sendBtn;
+  btn.disabled = false;
+  if (ok) {
+    showToast(T[lang].common.success, 'success');
+    closeModal('order-modal');
+    // clear selection
+    items.forEach(i => { orderChecked[i.id] = { checked: false, qty: '' }; });
+    document.getElementById('order-note').value = '';
+    renderOrder();
+  } else {
+    showToast(T[lang].common.error, 'error');
+  }
+}
+
+// ===== MANAGE PAGE =====
+function renderManage() {
+  const L = T[lang];
+  let filtered = items;
+  if (manageSearchQ) filtered = filtered.filter(i =>
+    i.name_th.toLowerCase().includes(manageSearchQ) ||
+    i.name_mm.toLowerCase().includes(manageSearchQ) ||
+    i.supplier.toLowerCase().includes(manageSearchQ)
+  );
+  if (manageFilterCat !== 'all') filtered = filtered.filter(i => i.category === manageFilterCat);
+
+  // render filter tabs
+  const filterEl = document.getElementById('manage-filters');
+  filterEl.innerHTML = [
+    `<button class="filter-tab ${manageFilterCat === 'all' ? 'active' : ''}" onclick="setManageFilter('all')">${L.common.all}</button>`,
+    ...CAT_ORDER.map(c =>
+      `<button class="filter-tab ${manageFilterCat === c ? 'active' : ''}" onclick="setManageFilter('${c}')">${T[lang].catEmoji[c]} ${T[lang].cats[c]}</button>`
+    )
+  ].join('');
+
+  const listEl = document.getElementById('manage-list');
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="empty-state" style="padding:30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p>ไม่พบรายการ</p></div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(item => {
+    const name = lang === 'mm' ? item.name_mm : item.name_th;
+    const secName = lang === 'mm' ? item.name_th : item.name_mm;
+    const emoji = T[lang].catEmoji[item.category];
+    const catName = T[lang].cats[item.category];
+    return `
+      <div class="manage-item">
+        <div class="manage-name">
+          <div style="font-size:14px;font-weight:500;">${name}</div>
+          <div class="manage-meta">${emoji} ${catName} · ${item.supplier}</div>
+          <div class="manage-meta" style="${lang==='mm'?'':'font-family:Noto Sans Myanmar,sans-serif'}">${secName}</div>
+        </div>
+        <button class="icon-btn" onclick="openItemModal('${item.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="icon-btn delete" onclick="deleteItem('${item.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function setManageFilter(cat) {
+  manageFilterCat = cat;
+  renderManage();
+}
+
+function openItemModal(id) {
+  editingItemId = id;
+  const L = T[lang];
+  if (id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    document.getElementById('item-modal-title').textContent = L.manage.editTitle;
+    document.getElementById('fm-name-th').value = item.name_th;
+    document.getElementById('fm-name-mm').value = item.name_mm;
+    document.getElementById('fm-category').value = item.category;
+    document.getElementById('fm-supplier').value = item.supplier;
+    document.getElementById('fm-unit-th').value = item.unit_th;
+    document.getElementById('fm-unit-mm').value = item.unit_mm;
+    document.getElementById('fm-minstock').value = item.minStock;
+    document.getElementById('fm-del-btn').style.display = '';
+  } else {
+    document.getElementById('item-modal-title').textContent = L.manage.addBtn;
+    document.getElementById('fm-name-th').value = '';
+    document.getElementById('fm-name-mm').value = '';
+    document.getElementById('fm-category').value = 'pork';
+    document.getElementById('fm-supplier').value = '';
+    document.getElementById('fm-unit-th').value = '';
+    document.getElementById('fm-unit-mm').value = '';
+    document.getElementById('fm-minstock').value = '';
+    document.getElementById('fm-del-btn').style.display = 'none';
+  }
+  openModal('item-modal');
+}
+
+function saveItem() {
+  const name_th = document.getElementById('fm-name-th').value.trim();
+  const name_mm = document.getElementById('fm-name-mm').value.trim();
+  const category = document.getElementById('fm-category').value;
+  const supplier = document.getElementById('fm-supplier').value.trim();
+  const unit_th = document.getElementById('fm-unit-th').value.trim();
+  const unit_mm = document.getElementById('fm-unit-mm').value.trim();
+  const minStock = parseFloat(document.getElementById('fm-minstock').value) || 0;
+
+  if (!name_th) { showToast('กรุณากรอกชื่อ (ไทย)', 'error'); return; }
+
+  if (editingItemId) {
+    const item = items.find(i => i.id === editingItemId);
+    if (item) {
+      Object.assign(item, { name_th, name_mm, category, supplier, unit_th, unit_mm, minStock });
+    }
+  } else {
+    items.push({ id: genId(), name_th, name_mm, category, supplier, unit_th, unit_mm, minStock, currentStock: null });
+    // init order state
+    const newId = items[items.length-1].id;
+    orderChecked[newId] = { checked: false, qty: '' };
+  }
+  saveItems();
+  closeModal('item-modal');
+  showToast(T[lang].common.saved, 'success');
+  renderManage();
+  renderStock();
+  renderOrder();
+}
+
+function deleteItemFromModal() {
+  if (!editingItemId) return;
+  if (!confirm(T[lang].manage.delConfirm)) return;
+  items = items.filter(i => i.id !== editingItemId);
+  saveItems();
+  closeModal('item-modal');
+  showToast(T[lang].common.deleted);
+  renderManage();
+  renderStock();
+  renderOrder();
+}
+
+function deleteItem(id) {
+  if (!confirm(T[lang].manage.delConfirm)) return;
+  items = items.filter(i => i.id !== id);
+  saveItems();
+  showToast(T[lang].common.deleted);
+  renderManage();
+  renderStock();
+  renderOrder();
+}
+
+// ===== SETTINGS =====
+function loadSettingsUI() {
+  document.getElementById('settings-bot-token').value = settings.botToken || '';
+  document.getElementById('settings-chat-id').value = settings.chatId || '';
+}
+
+function saveSettings() {
+  settings.botToken = document.getElementById('settings-bot-token').value.trim();
+  settings.chatId = document.getElementById('settings-chat-id').value.trim();
+  localStorage.setItem('gler_settings', JSON.stringify(settings));
+  showToast(T[lang].common.saved, 'success');
+}
+
+async function testTelegram() {
+  const token = document.getElementById('settings-bot-token').value.trim();
+  const chatId = document.getElementById('settings-chat-id').value.trim();
+  if (!token) { showToast(T[lang].common.noToken, 'error'); return; }
+  if (!chatId) { showToast(T[lang].common.noChatId, 'error'); return; }
+  const btn = document.getElementById('settings-test-btn');
+  btn.textContent = T[lang].common.loading;
+  btn.disabled = true;
+  const tmpSettings = { botToken: token, chatId };
+  const ok = await sendTelegramWith(tmpSettings, '✅ ทดสอบการส่งจาก เกลอ ข้าวขาหมู\nสำเร็จ! ระบบสต็อกพร้อมใช้งาน');
+  btn.textContent = T[lang].settings.testBtn;
+  btn.disabled = false;
+  showToast(ok ? T[lang].common.success : T[lang].common.error, ok ? 'success' : 'error');
+}
+
+function toggleHowTo() {
+  const body = document.getElementById('howto-body');
+  const chev = document.getElementById('howto-chevron');
+  const isOpen = body.classList.toggle('open');
+  chev.classList.toggle('open', isOpen);
+}
+
+// ===== TELEGRAM =====
+async function sendTelegram(text) {
+  return sendTelegramWith(settings, text);
+}
+
+async function sendTelegramWith(cfg, text) {
+  try {
+    const url = `https://api.telegram.org/bot${cfg.botToken}/sendMessage`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: cfg.chatId, text, parse_mode: 'HTML' })
+    });
+    const data = await res.json();
+    return data.ok;
+  } catch(e) {
+    return false;
+  }
+}
+
+// ===== MODAL =====
+function openModal(id) {
+  const el = document.getElementById(id);
+  el.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.className = 'toast';
+  }, 2500);
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
