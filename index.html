@@ -679,6 +679,7 @@ body.lang-mm {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(56,37,27,0.2); border-radius: 2px; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div id="app">
@@ -940,6 +941,61 @@ body.lang-mm {
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== SUPABASE =====
+const SUPABASE_URL = 'https://isajeiuzofzjxefklvmg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzYWplaXV6b2Z6anhlZmtsdm1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTQ2NjksImV4cCI6MjA4OTE3MDY2OX0.aLlEw4eE-dCm3h0PR0Ql-giyQ5DevRAtB_0CBc4E1e0';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function itemToDb(it) {
+  return { id:it.id, name_th:it.name_th, name_mm:it.name_mm||'', category:it.category||'', supplier:it.supplier||'', unit_th:it.unit_th||'', unit_mm:it.unit_mm||'', min_stock:it.minStock||0, current_stock:it.currentStock??null };
+}
+function itemFromDb(r) {
+  return { id:r.id, name_th:r.name_th, name_mm:r.name_mm, category:r.category, supplier:r.supplier, unit_th:r.unit_th, unit_mm:r.unit_mm, minStock:r.min_stock, currentStock:r.current_stock };
+}
+
+async function syncToSupabase() {
+  try { await db.from('items').upsert(items.map(itemToDb)); } catch(e) {}
+}
+
+async function loadFromSupabase() {
+  try {
+    const { data, error } = await db.from('items').select('*');
+    if (error || !data) return false;
+    if (data.length === 0) {
+      // First time: upload all default items
+      await db.from('items').upsert(items.map(itemToDb));
+      return true;
+    }
+    items = data.map(itemFromDb);
+    // Ensure new default items added in updates exist
+    DEFAULT_ITEMS.forEach(di => {
+      if (!items.find(i => i.id === di.id)) {
+        items.push({...di});
+        db.from('items').insert(itemToDb({...di})).then(()=>{});
+      }
+    });
+    localStorage.setItem('gler_items', JSON.stringify(items));
+    return true;
+  } catch(e) { return false; }
+}
+
+function subscribeRealtime() {
+  db.channel('items-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, payload => {
+      if (payload.eventType === 'DELETE') {
+        items = items.filter(i => i.id !== payload.old.id);
+      } else {
+        const updated = itemFromDb(payload.new);
+        const idx = items.findIndex(i => i.id === updated.id);
+        if (idx >= 0) items[idx] = updated; else items.push(updated);
+      }
+      localStorage.setItem('gler_items', JSON.stringify(items));
+      items.forEach(it => { if (!orderChecked[it.id]) orderChecked[it.id] = { checked: false, qty: '' }; });
+      renderHome(); renderStock(); renderOrder(); renderManage();
+    })
+    .subscribe();
+}
+
 // ===== TRANSLATIONS =====
 const T = {
   th: {
@@ -1079,15 +1135,13 @@ let catOpenState = {}; // track which categories are open per page
 let orderChecked = {}; // {itemId: {checked, qty}}
 
 // ===== INIT =====
-function init() {
+async function init() {
+  // Load from localStorage first (instant)
   const savedItems = localStorage.getItem('gler_items');
   if (savedItems) {
     items = JSON.parse(savedItems);
-    // Migrate: ensure all default items exist
     DEFAULT_ITEMS.forEach(di => {
-      if (!items.find(i => i.id === di.id)) {
-        items.push({...di});
-      }
+      if (!items.find(i => i.id === di.id)) items.push({...di});
     });
   } else {
     items = DEFAULT_ITEMS.map(i => ({...i}));
@@ -1099,7 +1153,6 @@ function init() {
   const savedLang = localStorage.getItem('gler_lang');
   if (savedLang) lang = savedLang;
 
-  // init order checked state
   items.forEach(it => {
     if (!orderChecked[it.id]) orderChecked[it.id] = { checked: false, qty: '' };
   });
@@ -1110,6 +1163,16 @@ function init() {
   renderOrder();
   renderManage();
   loadSettingsUI();
+
+  // Then sync with Supabase in background
+  const ok = await loadFromSupabase();
+  if (ok) {
+    items.forEach(it => {
+      if (!orderChecked[it.id]) orderChecked[it.id] = { checked: false, qty: '' };
+    });
+    renderHome(); renderStock(); renderOrder(); renderManage();
+  }
+  subscribeRealtime();
 
   document.getElementById('stock-search').addEventListener('input', e => {
     stockSearchQ = e.target.value.toLowerCase();
@@ -1127,6 +1190,7 @@ function init() {
 
 function saveItems() {
   localStorage.setItem('gler_items', JSON.stringify(items));
+  syncToSupabase();
 }
 
 function genId() {
