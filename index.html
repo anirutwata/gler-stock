@@ -949,6 +949,17 @@ body.lang-mm {
         </div>
       </div>
       <div class="settings-section">
+        <div class="settings-section-title">🏪 ผู้จำหน่าย</div>
+        <div class="settings-card">
+          <div id="supplier-list-settings" style="margin-bottom:12px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" class="form-input" id="new-supplier-name" placeholder="ชื่อผู้จำหน่ายใหม่..."
+              onkeydown="if(event.key==='Enter') addSupplierFromSettings()" style="flex:1;">
+            <button onclick="addSupplierFromSettings()" style="flex-shrink:0;padding:0 14px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;min-height:44px;font-family:inherit;">เพิ่ม</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
         <div class="settings-section-title" id="settings-lang-section">ภาษา</div>
         <div class="settings-card">
           <div class="lang-btn-group">
@@ -1073,7 +1084,15 @@ body.lang-mm {
       </div>
       <div class="form-group">
         <label class="form-label" id="fm-supplier-label">ผู้จำหน่าย</label>
-        <input type="text" class="form-input" id="fm-supplier">
+        <div style="display:flex;gap:8px;">
+          <select class="form-select" id="fm-supplier" style="flex:1;"></select>
+          <button type="button" onclick="toggleAddSupplierInline()" style="flex-shrink:0;width:44px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-size:22px;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;">+</button>
+        </div>
+        <div id="fm-supplier-add-wrap" style="display:none;margin-top:8px;display:flex;gap:8px;">
+          <input type="text" class="form-input" id="fm-supplier-new" placeholder="ชื่อผู้จำหน่ายใหม่..."
+            onkeydown="if(event.key==='Enter') confirmAddSupplier()" style="flex:1;">
+          <button type="button" onclick="confirmAddSupplier()" style="flex-shrink:0;padding:0 14px;background:var(--success);color:white;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;min-height:44px;font-family:inherit;">บันทึก</button>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group" style="margin-bottom:0">
@@ -1304,6 +1323,16 @@ const DEFAULT_ITEMS = [
 
 const CAT_ORDER = ['pork','chicken','ready','seasoning','vegetable','herb','packaging'];
 
+const DEFAULT_SUPPLIERS = [
+  {id:'ds1', name:'เบทาโกร'},
+  {id:'ds2', name:'เฮียติ่ง'},
+  {id:'ds3', name:'มหาชัย'},
+  {id:'ds4', name:'Makro'},
+  {id:'ds5', name:'ขอนแก่นผักสด'},
+  {id:'ds6', name:'Shopee'},
+  {id:'ds7', name:'Go Wholesale'},
+];
+
 // ===== STATE =====
 let lang = 'th';
 let items = [];
@@ -1321,6 +1350,7 @@ let currentUser = sessionStorage.getItem('gler_user') || '';
 let pendingPage = null;
 let sessions = [];
 let historyFilterType = 'all';
+let suppliers = [];
 
 // ===== INIT =====
 async function init() {
@@ -1363,6 +1393,7 @@ async function init() {
   }
   subscribeRealtime();
   loadSessions().then(() => renderHistory());
+  loadSuppliers().then(() => { renderSupplierSettings(); });
 
   document.getElementById('stock-search').addEventListener('input', e => {
     stockSearchQ = e.target.value.toLowerCase();
@@ -2000,24 +2031,26 @@ function openItemModal(id) {
     document.getElementById('fm-name-th').value = item.name_th;
     document.getElementById('fm-name-mm').value = item.name_mm;
     document.getElementById('fm-category').value = item.category;
-    document.getElementById('fm-supplier').value = item.supplier;
+    // supplier set via populateSupplierSelect()
     document.getElementById('fm-unit-th').value = item.unit_th;
     document.getElementById('fm-unit-mm').value = item.unit_mm;
     document.getElementById('fm-minstock').value = item.minStock;
     document.getElementById('fm-del-btn').style.display = '';
     setImagePreview(item.image || null);
+    populateSupplierSelect(item.supplier);
   } else {
     document.getElementById('item-modal-title').textContent = L.manage.addBtn;
     document.getElementById('fm-name-th').value = '';
     document.getElementById('fm-name-mm').value = '';
     document.getElementById('fm-category').value = 'pork';
-    document.getElementById('fm-supplier').value = '';
     document.getElementById('fm-unit-th').value = '';
     document.getElementById('fm-unit-mm').value = '';
     document.getElementById('fm-minstock').value = '';
     document.getElementById('fm-del-btn').style.display = 'none';
     setImagePreview(null);
+    populateSupplierSelect();
   }
+  document.getElementById('fm-supplier-add-wrap').style.display = 'none';
   openModal('item-modal');
 }
 
@@ -2025,7 +2058,7 @@ function saveItem() {
   const name_th = document.getElementById('fm-name-th').value.trim();
   const name_mm = document.getElementById('fm-name-mm').value.trim();
   const category = document.getElementById('fm-category').value;
-  const supplier = document.getElementById('fm-supplier').value.trim();
+  const supplier = document.getElementById('fm-supplier').value;
   const unit_th = document.getElementById('fm-unit-th').value.trim();
   const unit_mm = document.getElementById('fm-unit-mm').value.trim();
   const minStock = parseFloat(document.getElementById('fm-minstock').value) || 0;
@@ -2161,6 +2194,105 @@ function showToast(msg, type = '') {
   toastTimer = setTimeout(() => {
     toast.className = 'toast';
   }, 2500);
+}
+
+// ===== SUPPLIERS =====
+async function loadSuppliers() {
+  const saved = localStorage.getItem('gler_suppliers');
+  if (saved) suppliers = JSON.parse(saved);
+  try {
+    const { data, error } = await db.from('suppliers').select('*').order('name');
+    if (!error && data) {
+      if (data.length === 0) {
+        // First time: seed defaults
+        suppliers = DEFAULT_SUPPLIERS.map(s => ({...s}));
+        await db.from('suppliers').insert(suppliers);
+      } else {
+        suppliers = data;
+      }
+      localStorage.setItem('gler_suppliers', JSON.stringify(suppliers));
+    }
+  } catch(e) {
+    if (suppliers.length === 0) suppliers = DEFAULT_SUPPLIERS.map(s => ({...s}));
+  }
+}
+
+async function addSupplier(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  if (suppliers.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
+    showToast('มีผู้จำหน่ายนี้แล้ว', 'error'); return null;
+  }
+  const sup = { id: genId(), name: trimmed };
+  suppliers.push(sup);
+  suppliers.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+  localStorage.setItem('gler_suppliers', JSON.stringify(suppliers));
+  try { await db.from('suppliers').insert(sup); } catch(e) {}
+  return sup;
+}
+
+async function deleteSupplier(id) {
+  suppliers = suppliers.filter(s => s.id !== id);
+  localStorage.setItem('gler_suppliers', JSON.stringify(suppliers));
+  try { await db.from('suppliers').delete().eq('id', id); } catch(e) {}
+  renderSupplierSettings();
+  populateSupplierSelect();
+}
+
+function renderSupplierSettings() {
+  const el = document.getElementById('supplier-list-settings');
+  if (!el) return;
+  if (suppliers.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--secondary);padding:4px 0;">ยังไม่มีผู้จำหน่าย</div>';
+    return;
+  }
+  el.innerHTML = suppliers.map(s => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="flex:1;font-size:14px;">🏪 ${s.name}</span>
+      <button onclick="deleteSupplier('${s.id}')" style="background:none;border:none;cursor:pointer;color:#c62828;padding:4px 8px;font-size:18px;min-height:36px;border-radius:var(--radius-sm);" title="ลบ">✕</button>
+    </div>
+  `).join('');
+}
+
+async function addSupplierFromSettings() {
+  const inp = document.getElementById('new-supplier-name');
+  const sup = await addSupplier(inp.value);
+  if (sup) {
+    inp.value = '';
+    renderSupplierSettings();
+    showToast('เพิ่มผู้จำหน่ายแล้ว ✓', 'success');
+  }
+}
+
+function populateSupplierSelect(selectedName) {
+  const sel = document.getElementById('fm-supplier');
+  if (!sel) return;
+  const sorted = [...suppliers].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+  sel.innerHTML = sorted.map(s =>
+    `<option value="${s.name}" ${s.name === selectedName ? 'selected' : ''}>${s.name}</option>`
+  ).join('');
+  if (selectedName && !sorted.find(s => s.name === selectedName)) {
+    sel.innerHTML = `<option value="${selectedName}" selected>${selectedName}</option>` + sel.innerHTML;
+  }
+}
+
+function toggleAddSupplierInline() {
+  const wrap = document.getElementById('fm-supplier-add-wrap');
+  const isShown = wrap.style.display !== 'none' && wrap.style.display !== '';
+  wrap.style.display = isShown ? 'none' : 'flex';
+  if (!isShown) setTimeout(() => document.getElementById('fm-supplier-new').focus(), 100);
+}
+
+async function confirmAddSupplier() {
+  const inp = document.getElementById('fm-supplier-new');
+  const sup = await addSupplier(inp.value);
+  if (sup) {
+    inp.value = '';
+    document.getElementById('fm-supplier-add-wrap').style.display = 'none';
+    populateSupplierSelect(sup.name);
+    renderSupplierSettings();
+    showToast('เพิ่มผู้จำหน่ายแล้ว ✓', 'success');
+  }
 }
 
 // ===== IMAGE UPLOAD =====
