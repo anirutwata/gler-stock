@@ -729,24 +729,8 @@ body.lang-mm {
 .img-upload-placeholder span { font-size: 12px; }
 /* ===== USER CHIP ===== */
 .user-chip {
-  background: rgba(255,255,255,0.15);
-  border: 1.5px solid rgba(255,255,255,0.3);
-  border-radius: 14px;
-  padding: 3px 9px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.9);
-  cursor: pointer;
   display: none;
-  align-items: center;
-  gap: 4px;
-  max-width: 110px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-top: 4px;
-  flex-shrink: 0;
 }
-.user-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px; }
 
 /* ===== LOGIN MODAL ===== */
 .login-welcome {
@@ -823,11 +807,15 @@ body.lang-mm {
     <div class="header-brand">
       <span class="brand-name-main" id="hd-name">เกลอ ข้าวขาหมู</span>
       <span class="brand-name-sub" id="hd-sub">ระบบจัดการสต็อก</span>
-      <span class="user-chip" id="header-user-chip" onclick="changeUser()">👤 <span class="user-chip-name" id="header-user-name"></span></span>
     </div>
-    <div class="lang-toggle">
-      <button id="lang-th" class="active" onclick="setLang('th')">TH</button>
-      <button id="lang-mm" onclick="setLang('mm')">MM</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <button id="header-user-chip" onclick="changeUser()" style="display:none;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);border-radius:14px;padding:4px 10px;font-size:11px;color:white;cursor:pointer;font-family:inherit;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;">
+        👤 <span id="header-user-name"></span>
+      </button>
+      <div class="lang-toggle">
+        <button id="lang-th" class="active" onclick="setLang('th')">TH</button>
+        <button id="lang-mm" onclick="setLang('mm')">MM</button>
+      </div>
     </div>
   </header>
 
