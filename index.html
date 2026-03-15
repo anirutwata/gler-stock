@@ -1653,7 +1653,7 @@ function renderStock() {
                 <div class="item-status ${dotClass}"></div>
                 <div class="item-name">
                   <div class="item-name-th">${name}</div>
-                  ${lang === 'th' ? `<div class="item-name-mm" style="font-family:'Noto Sans Myanmar',sans-serif;">${item.name_mm}</div>` : `<div class="item-name-mm">${item.name_th}</div>`}
+                  ${lang === 'mm' ? `<div class="item-name-mm">${item.name_th}</div>` : ''}
                 </div>
                 <div class="qty-wrap">
                   <input type="number" class="qty-input" value="${val}" placeholder="0"
@@ -1848,7 +1848,7 @@ function renderOrder() {
                 ${thumb}
                 <div class="order-name">
                   <div style="font-size:13px;font-weight:500;">${name}${isLow ? ` <span class="low-warn">⚠️</span>` : ''}</div>
-                  ${lang === 'th' ? `<div style="font-size:11px;color:var(--secondary);font-family:'Noto Sans Myanmar',sans-serif;">${item.name_mm}</div>` : `<div style="font-size:11px;color:var(--secondary);">${item.name_th}</div>`}
+                  ${lang === 'mm' ? `<div style="font-size:11px;color:var(--secondary);">${item.name_th}</div>` : ''}
                 </div>
                 <div class="qty-wrap">
                   <input type="number" class="qty-input" value="${qty}" placeholder="0"
@@ -1991,7 +1991,7 @@ function renderManage() {
 
   listEl.innerHTML = filtered.map(item => {
     const name = lang === 'mm' ? item.name_mm : item.name_th;
-    const secName = lang === 'mm' ? item.name_th : item.name_mm;
+    const secName = lang === 'mm' ? item.name_th : null;
     const emoji = T[lang].catEmoji[item.category];
     const catName = T[lang].cats[item.category];
     const thumb = item.image
@@ -2003,7 +2003,7 @@ function renderManage() {
         <div class="manage-name">
           <div style="font-size:14px;font-weight:500;">${name}</div>
           <div class="manage-meta">${emoji} ${catName} · ${item.supplier}</div>
-          <div class="manage-meta" style="${lang==='mm'?'':'font-family:Noto Sans Myanmar,sans-serif'}">${secName}</div>
+          ${secName ? `<div class="manage-meta">${secName}</div>` : ''}
         </div>
         <button class="icon-btn" onclick="openItemModal('${item.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
